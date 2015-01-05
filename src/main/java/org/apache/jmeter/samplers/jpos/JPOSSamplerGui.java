@@ -1,4 +1,4 @@
-package org.apache.jmeter.samplers;
+package org.apache.jmeter.samplers.jpos;
 
 import java.awt.BorderLayout;
 import javax.swing.Box;
