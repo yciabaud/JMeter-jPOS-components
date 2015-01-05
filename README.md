@@ -11,7 +11,7 @@ Installation of JMeter plugin is simple, the plugin is build separate from the a
 
 `mvn dependency:copy-dependencies install -DexcludeGroupIds=org.apache.jmeter`
 
-Note: the '-DexcludeGroupIds=org.apache.jmeter' parameter tells maven not to copy the jmeter jars into the target dependencies directory. This is necessary if you run a different version of jmeter than what this plugin compiles against as when you copy over the CassJMeter jars (see below) you will end up with different versions of the ApacheJMeter jar in jmeter's lib directory, which really confuses the app when it tries to run. 
+Note: the '-DexcludeGroupIds=org.apache.jmeter' parameter tells maven not to copy the jmeter jars into the target dependencies directory. This is necessary if you run a different version of jmeter than what this plugin compiles against as when you copy over the JMeter-jPOS-components jars (see below) you will end up with different versions of the ApacheJMeter jar in jmeter's lib directory, which really confuses the app when it tries to run. 
 
 # Download latest JMeter and unzip
 From http://jmeter.apache.org/download_jmeter.cgi
