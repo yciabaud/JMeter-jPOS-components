@@ -1,8 +1,9 @@
 package org.apache.jmeter.samplers.jpos;
 
 import java.awt.BorderLayout;
-import javax.swing.Box;
+
 import javax.swing.JPanel;
+
 import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.protocol.tcp.config.gui.TCPConfigGui;
 import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
@@ -77,35 +78,21 @@ public class JPOSSamplerGui
         VerticalPanel mainPanel = new VerticalPanel();
         
         // Ajout de la section jPOS
-        mainPanel.add(createJPOSPanel());
-        
-
+        mainPanel.add(createJPOSPanel());        
         tcpDefaultPanel = new TCPConfigGui(false);
         
         // On enleve la partie de définition du texte
-        JPanel mainpanel2 = (JPanel) tcpDefaultPanel.getComponent(tcpDefaultPanel.getComponentCount()-1);
-        
-        Box box = (Box) mainpanel2.getComponent(mainpanel2.getComponentCount()-1);
-        
-        JPanel reqDataPanel = (JPanel) box.getComponent(10);
-        
-        reqDataPanel.setVisible(false);
-        
-        mainPanel.add(tcpDefaultPanel);
-
-        /*loginPanel = new LoginConfigGui(false);
-        loginPanel.setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString("login_config"))); // $NON-NLS-1$
-        mainPanel.add(loginPanel);*/
+//        JPanel mainpanel2 = (JPanel) tcpDefaultPanel.getComponent(tcpDefaultPanel.getComponentCount()-1);
+//        Box box = (Box) mainpanel2.getComponent(mainpanel2.getComponentCount()-1);
+//        JPanel reqDataPanel = (JPanel) box.getComponent(10);
+//        reqDataPanel.setVisible(false);        
+//        mainPanel.add(tcpDefaultPanel);
 
         add(mainPanel, BorderLayout.CENTER);
     }
 
-    private JPanel createJPOSPanel(){
-        
-        VerticalPanel panel = new VerticalPanel();
-        
-        // nom de la variable (préfixe) à utiliser pour les champs
-        
+    private JPanel createJPOSPanel(){        
+        VerticalPanel panel = new VerticalPanel();        
         
         return panel;
     }
