@@ -86,8 +86,8 @@ public class JPOSSamplerGui
 //        Box box = (Box) mainpanel2.getComponent(mainpanel2.getComponentCount()-1);
 //        JPanel reqDataPanel = (JPanel) box.getComponent(10);
 //        reqDataPanel.setVisible(false);        
-//        mainPanel.add(tcpDefaultPanel);
 
+        mainPanel.add(tcpDefaultPanel);
         add(mainPanel, BorderLayout.CENTER);
     }
 
