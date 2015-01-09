@@ -1,24 +1,27 @@
 package org.apache.jmeter.samplers.jpos;
 
-import org.jpos.iso.PackagerUtil;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-import org.apache.jmeter.samplers.Entry;
+
+import org.apache.jmeter.gui.custom.CustomTCPConfigGui;
+import org.apache.jmeter.iso.manager.ISOMUXSingleton;
+import org.apache.jmeter.iso.manager.SocketInterface;
 import org.apache.jmeter.protocol.tcp.sampler.LengthPrefixedBinaryTCPClientImpl;
 import org.apache.jmeter.protocol.tcp.sampler.TCPSampler;
+import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
-import org.apache.jmeter.threads.JMeterContextService;
-import org.apache.jmeter.threads.JMeterVariables;
+import org.apache.jmeter.util.SocketProxy;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 import org.jpos.iso.ISOBinaryField;
 import org.jpos.iso.ISOComponent;
 import org.jpos.iso.ISOException;
+import org.jpos.iso.ISOMUX;
 import org.jpos.iso.ISOMsg;
 import org.jpos.iso.ISOPackager;
-import org.jpos.iso.ISOField;
+import org.jpos.iso.packager.ISO87APackager;
+import org.jpos.iso.packager.ISO87BPackager;
 
 /**
  *
@@ -31,78 +34,101 @@ public class JPOSSampler extends TCPSampler {
     private final static String VARIABLE_SEPARATOR = "JPOSSampler.variableSeparator";
     private final static String HEXES = "0123456789ABCDEF";
     private ISOMsg msg = new ISOMsg();
+    private boolean initialized = false;
 
     public JPOSSampler() {
-
         // Default value for TCP Client
         setClassname(LengthPrefixedBinaryTCPClientImpl.class.getName());
-
+    }
+    
+    public void initialize() throws Exception {
+//    	final String threadName = JMeterContextService.getContext().getThread().getThreadName();    	
+    	initialized = true;
     }
 
     @Override
     public SampleResult sample(Entry e) {
-
-        SampleResult res = new SampleResult();
-        res.setSampleLabel(getName());
-        res.sampleStart();
-        res.setSuccessful(true);
+        SampleResult res = new SampleResult();        
+        res.setSampleLabel(getName());        
+        boolean isOK = false;
+        if(!initialized){
+        	try {
+				initialize();
+			} catch (Exception e1) {
+				res.setResponseMessage(e1.getMessage());
+                res.setSuccessful(false);
+                return res;
+			}
+        }                     
 
         ISOPackager customPackager = null;
+		customPackager = new ISO87BPackager();
+		
+        // Listing All the Thread Context Variables
+//        JMeterVariables variables = JMeterContextService.getContext().getVariables();
+        
+        String server = getPropertyAsString(CustomTCPConfigGui.SERVER);
+        log.info("server = " + server);
+        String port = getPropertyAsString(CustomTCPConfigGui.PORT);
+        log.info("port = " + port);
+        String timeout = getPropertyAsString(CustomTCPConfigGui.TIMEOUT);
+        log.info("timeout = " + timeout);
+        String requestData = getPropertyAsString(CustomTCPConfigGui.REQUEST);
+        log.info("request data = " + requestData);        
+        res.sampleStart();
+        
+        ISOMUXSingleton isoMUXSingleton = ISOMUXSingleton.getInstance(customPackager,server,Integer.parseInt(port));
+        Thread threadIsoMux = new Thread(isoMUXSingleton.getISOMUX());
+        log.info("start thread iso mux");
+        threadIsoMux.start();        
+        ISOMUX isoMUX = isoMUXSingleton.getISOMUX();
+        SocketInterface socket = null;
         try {
-            customPackager = PackagerUtil.getPackager();
-        } catch (ISOException ex) {
-            log.error("Erreur a la creation de l arborescence ISO", ex);
-            res.sampleEnd();
+            socket = new SocketProxy(isoMUX);
+			ISOMsg isoSample = SampleISOMsg.getSampleISOMsg();
+			log.info("hit to host destination");
+			ISOMsg isoResponse = socket.isoRequest(isoSample);
+			if(isoResponse!=null){
+				log.info("iso response is not null");
+				logISOMsg(isoResponse);
+				res.setResponseCodeOK();
+	            isOK = true;			
+			}else{
+				log.info("iso response is null or timeout");
+				isOK = false;
+				res.setResponseMessage("timeout");
+	            res.setSuccessful(false);
+			}
+		} catch (ISOException e1) {
+			log.error(e1.getMessage());
+			isOK = false;
+			res.setResponseMessage(e1.getMessage());
             res.setSuccessful(false);
-
-            return res;
-        }
-
-        // pour chaque variable correspondant au préfixe:
-        JMeterVariables variables = JMeterContextService.getContext().getVariables();
-
-        for (java.util.Map.Entry<String, Object> variable : variables.entrySet()) {
-
-            // Si c'est une variable a traiter
-            if (variable.getKey().startsWith(getVariablesPrefix())) {
-                String tokens = variable.getKey().substring(getVariablesPrefix().length());
-
-                try {
-                    createISOField(tokens, (String) variable.getValue());
-                } catch (ISOException ex) {
-                    log.error("Erreur a la creation de l arborescence ISO", ex);
-                    res.sampleEnd();
-                    res.setSuccessful(false);
-
-                    return res;
-                }
-            }
-
-        }
-
-        msg.setPackager(customPackager);
-        msg.dump(System.out, " ");
-
-        try {
-
-            byte[] request = msg.pack();
-
-            String sReq = getHex(request);
-            res.setSamplerData(sReq);
-
-            log.info("Size   :  " + sReq.length());
-            log.info("Sending:  " + sReq);
-            setRequestData(sReq);
-        } catch (ISOException ex) {
-            log.error("Erreur a la creation de l arborescence ISO", ex);
-            res.sampleEnd();
-            res.setSuccessful(false);
-
-            return res;
-        }
+		}
+        res.sampleEnd();
+        res.setSuccessful(isOK);        
         return res;
-        //return super.sample(e);
     }
+    
+	private void logISOMsg(ISOMsg msg) {
+		System.out.println("----ISO MESSAGE-----");
+		log.info("----ISO MESSAGE-----");
+		try {
+			System.out.println("  MTI : " + msg.getMTI());
+			log.info("  MTI : " + msg.getMTI());
+			for (int i=1;i<=msg.getMaxField();i++) {
+				if (msg.hasField(i)) {
+					System.out.println("Field-"+i+" : "+msg.getString(i)+", Length : "+msg.getString(i).length());
+					log.info("Field-"+i+" : "+msg.getString(i)+", Length : "+msg.getString(i).length());
+				}
+			}
+		} catch (ISOException e) {
+			e.printStackTrace();
+		} finally {
+			log.info("--------------------");
+			System.out.println("--------------------");
+		}
+	}
 
     private void createISOField(String tokens, String value) throws ISOException {
 
@@ -110,7 +136,6 @@ public class JPOSSampler extends TCPSampler {
         StringTokenizer tokenizer = new StringTokenizer(tokens.replaceAll("[a-zA-Z]", ""), getVariablesSeparator());
         List<Integer> ids = new ArrayList<Integer>();
 
-        // On parcourt la liste des sous champs
         while (tokenizer.hasMoreTokens()) {
 
             String token = tokenizer.nextToken();
@@ -120,7 +145,7 @@ public class JPOSSampler extends TCPSampler {
                 id = Integer.parseInt(token);
                 ids.add(id);
             } catch (NumberFormatException ex) {
-                log.warn("Ceci n'est pas un identifiant de champs: " + token, ex);
+                log.warn("Numer format exception: " + token, ex);
                 continue;
             }
 
@@ -146,14 +171,13 @@ public class JPOSSampler extends TCPSampler {
                 field = parent.getComponent(id);
                 // on vérifie l'existence
                 if (field == null) {
-
-                    // si on est au premier niveau et que c est un champs bin
-                    if (PackagerUtil.isBinary(ids, id)) {
-                        field = new ISOBinaryField(id);
-                    } else {
-                        field = new ISOField(id);
-                    }
-                    parent.set(field);
+//                    if (PackagerUtil.isBinary(ids, id)) {
+//                        field = new ISOBinaryField(id);
+//                    } else {
+//                        field = new ISOField(id);
+//                    }
+//                    parent.set(field);
+                	log.warn("field is null");
                 }
             } else {
                 log.warn("Field " + id + "=" + value + " not set! Incompatible vars.");
