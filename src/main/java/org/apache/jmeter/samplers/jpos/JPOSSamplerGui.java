@@ -71,7 +71,7 @@ public class JPOSSamplerGui
         VerticalPanel mainPanel = new VerticalPanel();                
         tcpDefaultPanel = new CustomTCPConfigGui(false);        
         mainPanel.add(tcpDefaultPanel);
-        
+
         add(mainPanel, BorderLayout.CENTER);
     }
     
