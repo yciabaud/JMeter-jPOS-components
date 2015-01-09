@@ -3,7 +3,8 @@ package org.apache.jmeter.util;
 import java.io.IOException;
 
 import org.apache.jmeter.iso.manager.SocketInterface;
-import org.apache.log4j.Logger;
+import org.apache.jorphan.logging.LoggingManager;
+import org.apache.log.Logger;
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMUX;
 import org.jpos.iso.ISOMsg;
@@ -13,7 +14,7 @@ public class SocketProxy implements SocketInterface {
 	
 	private ISOMUX isoMux;
 	
-	private static Logger logger = Logger.getLogger(SocketProxy.class.getName());
+    private static final Logger logger = LoggingManager.getLoggerForClass();
 	
 	public SocketProxy(ISOMUX isoMUX) throws ISOException {		
 		this.isoMux = isoMUX;
@@ -35,7 +36,9 @@ public class SocketProxy implements SocketInterface {
 		}
 	}
 
-	public ISOMsg isoRequest(ISOMsg isoMsg) {			
+	public ISOMsg isoRequest(ISOMsg isoMsg) {		
+		logger.info("masuk iso request ...");
+		System.out.println("masuk iso request ...");
 		if(!isoMux.isConnected()){
 			try {
 				isoMux.getISOChannel().reconnect();
@@ -45,10 +48,12 @@ public class SocketProxy implements SocketInterface {
 				
 		ISORequest req = new ISORequest(isoMsg);		
 		isoMux.queue(req);		
+		System.out.println("----Get Request----");
 		logger.info("----Get Request----");
 		logISOMsg(isoMsg);    	
 		ISOMsg isoReply = req.getResponse(30*1000);
         if (isoReply != null) {
+        	System.out.println("----Get Response----");
         	logger.info("----Get Response----");
         	logISOMsg(isoReply);
         }        

@@ -41,11 +41,11 @@
 			<artifactId>ApacheJMeter_java</artifactId>
 			<version>2.9</version>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.jmeter</groupId>
-			<artifactId>ApacheJMeter_report</artifactId>
-			<version>2.9</version>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.jmeter</groupId> -->
+<!-- 			<artifactId>ApacheJMeter_report</artifactId> -->
+<!-- 			<version>2.9</version> -->
+<!-- 		</dependency> -->
 
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
@@ -53,31 +53,31 @@
 			<version>2.11</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.jmeter</groupId>
-			<artifactId>ApacheJMeter_ftp</artifactId>
-			<version>2.9</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jmeter</groupId>
-			<artifactId>ApacheJMeter_jdbc</artifactId>
-			<version>2.9</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jmeter</groupId>
-			<artifactId>ApacheJMeter_jms</artifactId>
-			<version>2.9</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jmeter</groupId>
-			<artifactId>ApacheJMeter_ldap</artifactId>
-			<version>2.9</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jmeter</groupId>
-			<artifactId>ApacheJMeter_mail</artifactId>
-			<version>2.9</version>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.jmeter</groupId> -->
+<!-- 			<artifactId>ApacheJMeter_ftp</artifactId> -->
+<!-- 			<version>2.9</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.jmeter</groupId> -->
+<!-- 			<artifactId>ApacheJMeter_jdbc</artifactId> -->
+<!-- 			<version>2.9</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.jmeter</groupId> -->
+<!-- 			<artifactId>ApacheJMeter_jms</artifactId> -->
+<!-- 			<version>2.9</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.jmeter</groupId> -->
+<!-- 			<artifactId>ApacheJMeter_ldap</artifactId> -->
+<!-- 			<version>2.9</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.jmeter</groupId> -->
+<!-- 			<artifactId>ApacheJMeter_mail</artifactId> -->
+<!-- 			<version>2.9</version> -->
+<!-- 		</dependency> -->
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
 			<artifactId>jorphan</artifactId>
