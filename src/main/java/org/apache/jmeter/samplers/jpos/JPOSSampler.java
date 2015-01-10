@@ -7,6 +7,8 @@ import org.apache.jmeter.protocol.tcp.sampler.LengthPrefixedBinaryTCPClientImpl;
 import org.apache.jmeter.protocol.tcp.sampler.TCPSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.testelement.TestStateListener;
+import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.util.SocketProxy;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
@@ -18,15 +20,17 @@ import org.jpos.iso.packager.ISO87BPackager;
 
 /**
  *
- * @author "Yoann Ciabaud" <yoann.ciabaud@monext.fr>
+ * @author 
+ * "Yoann Ciabaud" <yoann.ciabaud@monext.fr>
+ * "Erlangga" <erlangga258@gmail.com>
  */
-public class JPOSSampler extends TCPSampler {
+public class JPOSSampler extends TCPSampler implements TestStateListener {
 
 	private static final Logger log = LoggingManager.getLoggerForClass();
-	private final static String VARIABLE_PREFIX = "JPOSSampler.variablePrefix";
-	private final static String VARIABLE_SEPARATOR = "JPOSSampler.variableSeparator";
 	private final static String HEXES = "0123456789ABCDEF";
-	private boolean initialized = false;
+	private boolean initialized = false;	
+	private ISOMUXSingleton isoMUXSingleton;	
+	private static final String HEADER_TPDU ="0000000000";
 
 	public JPOSSampler() {
 		// Default value for TCP Client
@@ -36,11 +40,22 @@ public class JPOSSampler extends TCPSampler {
 	public void initialize() throws Exception {
 		// final String threadName =
 		// JMeterContextService.getContext().getThread().getThreadName();
+		
+		log.info("call initilalize() ...");
+		
+		ISOPackager customPackager = new ISO87BPackager();		
+		String server = getPropertyAsString(CustomTCPConfigGui.SERVER);
+		String port = getPropertyAsString(CustomTCPConfigGui.PORT);
+		
+		isoMUXSingleton = ISOMUXSingleton.getInstance(
+				customPackager, server, Integer.parseInt(port), HEADER_TPDU);
+		
 		initialized = true;
-	}
+	}	
 
 	@Override
 	public SampleResult sample(Entry e) {
+		log.info("call sample() ...");
 		SampleResult res = new SampleResult();
 		res.setSampleLabel(getName());
 		boolean isOK = false;
@@ -52,84 +67,86 @@ public class JPOSSampler extends TCPSampler {
 				res.setSuccessful(false);
 				return res;
 			}
-		}
-		
-		ISOPackager customPackager = null;
-		customPackager = new ISO87BPackager();
+		}		
 
 		// Listing All the Thread Context Variables
 		// JMeterVariables variables =
 		// JMeterContextService.getContext().getVariables();
-
-		String server = getPropertyAsString(CustomTCPConfigGui.SERVER);
-		String port = getPropertyAsString(CustomTCPConfigGui.PORT);
 		String timeout = getPropertyAsString(CustomTCPConfigGui.TIMEOUT);
+		int intTimeOut = 30*1000;
+		if(timeout!=null && !timeout.equals("")){
+			log.info("timeout = " + timeout);
+			intTimeOut = Integer.parseInt(timeout);
+		}
+		
 		String requestData = getPropertyAsString(CustomTCPConfigGui.REQUEST);
+		if(requestData!=null && !requestData.equals("")){
+			log.info("request data \n"+requestData);
+		}
 		res.sampleStart();
-
-		ISOMUXSingleton isoMUXSingleton = ISOMUXSingleton.getInstance(
-				customPackager, server, Integer.parseInt(port));
-		Thread threadIsoMux = new Thread(isoMUXSingleton.getISOMUX());
-		log.info("start thread iso mux");
-		threadIsoMux.start();
-		ISOMUX isoMUX = isoMUXSingleton.getISOMUX();
+				
+		/*
+		 * Better solutions for running threads
+		 */
+//		ExecutorService executor = Executors.newFixedThreadPool(2);  
+//		Runnable runnable = new Runnable() {                         
+//		    @Override                                                
+//		    public void run() {                                      
+//		        System.out.println(Thread.currentThread().getName());
+//		    }                                                        
+//		};                                                           
+//		executor.execute(runnable);                                  
+//		executor.execute(runnable);                                  
+//		                                                             
+//		executor.shutdown();
+		
 		SocketInterface socket = null;
+		ISOMUX isoMUX = isoMUXSingleton.getISOMUX();
 		try {
 			socket = new SocketProxy(isoMUX);
 			ISOMsg isoSample = SampleISOMsg.getSampleISOMsg();
 			log.info("hit to host destination");
-			ISOMsg isoResponse = socket.isoRequest(isoSample);
+			ISOMsg isoResponse = socket.isoRequest(isoSample, intTimeOut);
 			if (isoResponse != null) {
 				log.info("iso response is not null");
+				String response = logISOMsg(isoResponse);
+				if(response!=null){
+					res.setResponseMessage(response);
+				}
 				res.setResponseCodeOK();
 				isOK = true;
 			} else {
 				log.info("iso response is null or timeout");
 				isOK = false;
 				res.setResponseMessage("timeout");
-				res.setSuccessful(false);
 			}
 		} catch (ISOException e1) {
 			log.error(e1.getMessage());
 			isOK = false;
 			res.setResponseMessage(e1.getMessage());
-			res.setSuccessful(false);
 		}
+				
 		res.sampleEnd();
 		res.setSuccessful(isOK);
 		return res;
 	}
-
-	/**
-	 *
-	 * @return
-	 */
-	public String getVariablesPrefix() {
-		return getPropertyAsString(VARIABLE_PREFIX);
-	}
-
-	/**
-	 *
-	 * @param variablePrefix
-	 */
-	public void setVariablesPrefix(String variablePrefix) {
-		setProperty(VARIABLE_PREFIX, variablePrefix);
-	}
-
-	/**
-	 *
-	 * @return
-	 */
-	public String getVariablesSeparator() {
-		return getPropertyAsString(VARIABLE_SEPARATOR);
-	}
-
-	/**
-	 *
-	 * @param separator
-	 */
-	public void setVariablesSeparator(String separator) {
-		setProperty(VARIABLE_SEPARATOR, separator);
+	
+	private String logISOMsg(ISOMsg msg) {		
+		StringBuffer sBuffer = new StringBuffer();
+		sBuffer.append("----RESPONSE ISO MESSAGE-----\n");
+		try {
+			sBuffer.append("  MTI : " + msg.getMTI());
+			for (int i=1;i<=msg.getMaxField();i++) {
+				if (msg.hasField(i)) {
+					sBuffer.append("Field-"+i+" : "+msg.getString(i)+", Length : "+msg.getString(i).length()+"\n");
+				}
+			}
+		} catch (ISOException e) {
+			e.printStackTrace();
+		} finally {
+			sBuffer.append("--------------------\n");
+		}
+		return sBuffer.toString();
 	}
 
 	public static String getHex(byte[] raw) {
@@ -161,5 +178,26 @@ public class JPOSSampler extends TCPSampler {
 			}
 		}
 		return data;
+	}
+
+	@Override
+	public void testEnded() {
+		log.info("call testEnded()");		
+	}
+
+	@Override
+	public void testEnded(String arg0) {
+	}
+
+	@Override
+	public void testStarted() {
+		log.info("call testStarted()");		
+		int totalThreads = JMeterContextService.getTotalThreads();
+		log.info("total threads = " + totalThreads );
+	}
+
+	@Override
+	public void testStarted(String arg0) {
+		isoMUXSingleton.terminate();
 	}
 }

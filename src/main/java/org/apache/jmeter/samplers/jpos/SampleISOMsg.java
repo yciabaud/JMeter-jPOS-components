@@ -8,7 +8,7 @@ import org.jpos.iso.ISOMsg;
 
 /**
  * @author erlangga
- *
+ * email : erlangga258@gmail.com
  */
 public class SampleISOMsg {	
 	public static ISOMsg getSampleISOMsg() throws ISOException{

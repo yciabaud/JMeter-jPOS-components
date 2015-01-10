@@ -62,8 +62,6 @@ public class JPOSSamplerGui
     }
 
     private void init() {
-    	log.info("running init ,,,");
-    	System.out.println("running init ,,,");
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
         add(makeTitlePanel(), BorderLayout.NORTH);

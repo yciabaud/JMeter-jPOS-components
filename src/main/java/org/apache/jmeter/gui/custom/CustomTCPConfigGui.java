@@ -156,7 +156,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	private JPanel createRequestPanel() {
 		JLabel reqLabel = new JLabel(
 				JMeterUtils.getResString("tcp_request_data"));
-		requestData = new JTextArea(3, 0);
+		requestData = new JTextArea(30, 0);
 		requestData.setName(REQUEST);
 		reqLabel.setLabelFor(requestData);
 

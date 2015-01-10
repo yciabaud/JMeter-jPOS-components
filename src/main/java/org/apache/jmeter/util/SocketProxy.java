@@ -10,6 +10,10 @@ import org.jpos.iso.ISOMUX;
 import org.jpos.iso.ISOMsg;
 import org.jpos.iso.ISORequest;
 
+/**
+ * @author erlangga
+ * email : erlangga258@gmail.com
+ */
 public class SocketProxy implements SocketInterface {
 	
 	private ISOMUX isoMux;
@@ -36,7 +40,7 @@ public class SocketProxy implements SocketInterface {
 		}
 	}
 
-	public ISOMsg isoRequest(ISOMsg isoMsg) {		
+	public ISOMsg isoRequest(final ISOMsg isoMsg, final int timeout) {		
 		logger.info("masuk iso request ...");
 		System.out.println("masuk iso request ...");
 		if(!isoMux.isConnected()){
@@ -50,8 +54,9 @@ public class SocketProxy implements SocketInterface {
 		isoMux.queue(req);		
 		System.out.println("----Get Request----");
 		logger.info("----Get Request----");
-		logISOMsg(isoMsg);    	
-		ISOMsg isoReply = req.getResponse(30*1000);
+		logISOMsg(isoMsg);
+		// default = 30*1000
+		ISOMsg isoReply = req.getResponse(timeout);
         if (isoReply != null) {
         	System.out.println("----Get Response----");
         	logger.info("----Get Response----");
