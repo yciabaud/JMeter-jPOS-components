@@ -2,10 +2,8 @@ package org.apache.jmeter.samplers.jpos;
 
 import java.awt.BorderLayout;
 
-import javax.swing.JPanel;
-
+import org.apache.jmeter.gui.custom.CustomTCPConfigGui;
 import org.apache.jmeter.gui.util.VerticalPanel;
-import org.apache.jmeter.protocol.tcp.config.gui.TCPConfigGui;
 import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.logging.LoggingManager;
@@ -14,17 +12,14 @@ import org.apache.log.Logger;
 /**
  *
  * @author apc
+ * "Erlangga" <erlangga258@gmail.com>
  */
 public class JPOSSamplerGui
         extends AbstractSamplerGui {
-
-    private TCPConfigGui tcpDefaultPanel;
+	
+	private CustomTCPConfigGui tcpDefaultPanel;	
+    private static final Logger log = LoggingManager.getLoggerForClass();
     
-     private static final Logger log = LoggingManager.getLoggerForClass();
-
-    /**
-     *
-     */
     public JPOSSamplerGui() {
         init();
     }
@@ -36,13 +31,13 @@ public class JPOSSamplerGui
 
     @Override
     public void configure(TestElement element) {
-
         super.configure(element);
-        tcpDefaultPanel.configure(element);
-        
+        log.info("running configure ,,,");        
+        tcpDefaultPanel.configure(element);        
     }
 
     public TestElement createTestElement() {
+    	log.info("running createTestElement ,,,");
         JPOSSampler sampler = new JPOSSampler();
         modifyTestElement(sampler);
         return sampler;
@@ -54,47 +49,35 @@ public class JPOSSamplerGui
      * @see org.apache.jmeter.gui.JMeterGUIComponent#modifyTestElement(TestElement)
      */
     public void modifyTestElement(TestElement sampler) {
-        sampler.clear();
-        sampler.addTestElement(tcpDefaultPanel.createTestElement());
+        //sampler.clear();
+        //sampler.addTestElement(tcpDefaultPanel.createTestElement());  
+    	log.info("running modifyTestElement ,,,");
+        sampler.setProperty(CustomTCPConfigGui.SERVER, tcpDefaultPanel.getServer());
+        sampler.setProperty(CustomTCPConfigGui.PORT, tcpDefaultPanel.getPort());
+        sampler.setProperty(CustomTCPConfigGui.TIMEOUT, tcpDefaultPanel.getTimeout());
+        sampler.setProperty(CustomTCPConfigGui.CHANNEL_KEY, tcpDefaultPanel.getChannel());
+        
+        if(tcpDefaultPanel.getPackagerFile()!=null){
+        	sampler.setProperty(CustomTCPConfigGui.PACKAGER_KEY, tcpDefaultPanel.getPackagerFile());
+        }
+        
+        if(tcpDefaultPanel.getRequestFile()!=null){
+        	sampler.setProperty(CustomTCPConfigGui.REQ_KEY, tcpDefaultPanel.getRequestFile());
+        }
+        
         this.configureTestElement(sampler);
-    }
-
-    /**
-     * Implements JMeterGUIComponent.clearGui
-     */
-    @Override
-    public void clearGui() {
-        super.clearGui();
-
-        tcpDefaultPanel.clearGui();
     }
 
     private void init() {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
-
         add(makeTitlePanel(), BorderLayout.NORTH);
-
-        VerticalPanel mainPanel = new VerticalPanel();
         
-        // Ajout de la section jPOS
-        mainPanel.add(createJPOSPanel());        
-        tcpDefaultPanel = new TCPConfigGui(false);
-        
-        // On enleve la partie de définition du texte
-//        JPanel mainpanel2 = (JPanel) tcpDefaultPanel.getComponent(tcpDefaultPanel.getComponentCount()-1);
-//        Box box = (Box) mainpanel2.getComponent(mainpanel2.getComponentCount()-1);
-//        JPanel reqDataPanel = (JPanel) box.getComponent(10);
-//        reqDataPanel.setVisible(false);        
-
+        VerticalPanel mainPanel = new VerticalPanel();                
+        tcpDefaultPanel = new CustomTCPConfigGui(false);        
         mainPanel.add(tcpDefaultPanel);
-        add(mainPanel, BorderLayout.CENTER);
-    }
 
-    private JPanel createJPOSPanel(){        
-        VerticalPanel panel = new VerticalPanel();        
-        
-        return panel;
+        add(mainPanel, BorderLayout.CENTER);
     }
     
     public String getLabelResource() {
