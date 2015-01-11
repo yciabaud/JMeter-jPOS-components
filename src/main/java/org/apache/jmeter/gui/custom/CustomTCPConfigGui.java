@@ -4,11 +4,15 @@
 package org.apache.jmeter.gui.custom;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
 
-import javax.swing.JCheckBox;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import org.apache.jmeter.config.ConfigTestElement;
@@ -17,29 +21,31 @@ import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.protocol.tcp.sampler.TCPSampler;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.util.JOrphanUtils;
-
+import org.apache.jorphan.logging.LoggingManager;
+import org.apache.log.Logger;
 
 /**
- * @author erlangga
- * email : erlangga258@gmail.com
+ * @author erlangga email : erlangga258@gmail.com
  */
 public class CustomTCPConfigGui extends AbstractConfigGui {
 
 	public final static String SERVER = "server"; //$NON-NLS-1$
-	public final static String PORT = "port"; //$NON-NLS-1$   
-//	private final static String FILENAME = "filename"; //$NON-NLS-1$ 
+	public final static String PORT = "port"; //$NON-NLS-1$    
 	public final static String TIMEOUT = "timeout"; //$NON-NLS-1$
-	public final static String NODELAY = "nodelay"; //$NON-NLS-1$
-	public final static String REQUEST = "request"; //$NON-NLS-1$
+	public final static String CHANNEL_KEY = "channel";
+	public final static String PACKAGER_KEY = "packager";
+	public final static String REQ_KEY = "request2";
 
 	private JTextField server;
 	private JTextField port;
-//	private JTextField filename;
 	private JTextField timeout;
-	private JCheckBox setNoDelay;
+	private JComboBox comboChannel;
+	private String packagerFile;
+	private String fileRequestData;
+	
+	private static final Logger log = LoggingManager.getLoggerForClass();
 
-	private JTextArea requestData;
+	private static final String[] CHANNEL_LIST = { "NACChannel" };
 
 	private boolean displayName = true;
 
@@ -60,11 +66,15 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		super.configure(element);
 		server.setText(element.getPropertyAsString(TCPSampler.SERVER));
 		port.setText(element.getPropertyAsString(TCPSampler.PORT));
-		// filename.setText(element.getPropertyAsString(TCPSampler.FILENAME));
 		timeout.setText(element.getPropertyAsString(TCPSampler.TIMEOUT));
-		setNoDelay
-				.setSelected(element.getPropertyAsBoolean(TCPSampler.NODELAY));
-		requestData.setText(element.getPropertyAsString(TCPSampler.REQUEST));
+		
+		if(element.getPropertyAsString(PACKAGER_KEY)!=null){
+			packagerFile = element.getPropertyAsString(PACKAGER_KEY);
+		}
+		
+		if(element.getPropertyAsString(REQ_KEY)!=null){
+			fileRequestData = element.getPropertyAsString(REQ_KEY);
+		}		
 	}
 
 	public TestElement createTestElement() {
@@ -82,11 +92,14 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		configureTestElement(element);
 		element.setProperty(TCPSampler.SERVER, server.getText());
 		element.setProperty(TCPSampler.PORT, port.getText());
-		// element.setProperty(TCPSampler.FILENAME, filename.getText());
-		element.setProperty(TCPSampler.NODELAY,
-				JOrphanUtils.booleanToSTRING(setNoDelay.isSelected()));
-		element.setProperty(TCPSampler.TIMEOUT, timeout.getText());
-		element.setProperty(TCPSampler.REQUEST, requestData.getText());
+		element.setProperty(TCPSampler.TIMEOUT, timeout.getText());		
+		
+		if(packagerFile!=null){
+			element.setProperty(PACKAGER_KEY, packagerFile);
+		}		
+		if(fileRequestData!=null){
+			element.setProperty(REQ_KEY, fileRequestData);
+		}
 	}
 
 	private JPanel createTimeoutPanel() {
@@ -101,22 +114,23 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		timeoutPanel.add(timeout, BorderLayout.CENTER);
 		return timeoutPanel;
 	}
-	
-	public String getTimeout(){
+
+	public String getTimeout() {
 		return timeout.getText();
 	}
 
-	private JPanel createNoDelayPanel() {
-		JLabel label = new JLabel(JMeterUtils.getResString("tcp_nodelay"));
-
-		setNoDelay = new JCheckBox();
-		setNoDelay.setName(NODELAY);
-		label.setLabelFor(setNoDelay);
-
-		JPanel nodelayPanel = new JPanel(new BorderLayout(5, 0));
-		nodelayPanel.add(label, BorderLayout.WEST);
-		nodelayPanel.add(setNoDelay, BorderLayout.CENTER);
-		return nodelayPanel;
+	public String getPackagerFile() {
+		if(packagerFile!=null){
+			return packagerFile;
+		}		
+		return null;
+	}
+	
+	public String getRequestFile(){
+		if(fileRequestData!=null){
+			return fileRequestData;
+		}
+		return null;
 	}
 
 	private JPanel createServerPanel() {
@@ -131,8 +145,8 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		serverPanel.add(server, BorderLayout.CENTER);
 		return serverPanel;
 	}
-	
-	public String getServer(){
+
+	public String getServer() {
 		return server.getText();
 	}
 
@@ -148,43 +162,119 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		PortPanel.add(port, BorderLayout.CENTER);
 		return PortPanel;
 	}
-	
-	public String getPort(){
+
+	public String getPort() {
 		return port.getText();
 	}
 
-	private JPanel createRequestPanel() {
-		JLabel reqLabel = new JLabel(
-				JMeterUtils.getResString("tcp_request_data"));
-		requestData = new JTextArea(30, 0);
-		requestData.setName(REQUEST);
-		reqLabel.setLabelFor(requestData);
+	private JPanel createPackagerPanel() {
+		JLabel packagerlabel = new JLabel("Packager:");
 
-		JPanel reqDataPanel = new JPanel(new BorderLayout(5, 0));
-		reqDataPanel.add(reqLabel, BorderLayout.WEST);
-		reqDataPanel.add(requestData, BorderLayout.CENTER);
-		return reqDataPanel;
+		final JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setCurrentDirectory(new File(System
+				.getProperty("user.home")));
+//		fileChooser.setFileFilter(new FileFilter()
+//        {
+//           @Override
+//           public boolean accept(File file)
+//           {
+//              return file.getName().toUpperCase().equals(".XML");
+//           }
+//
+//           @Override
+//           public String getDescription()
+//           {
+//              return ".xml files";
+//           }
+//        });
+		
+		final JLabel packagerPath = new JLabel("");
+		JButton btnChoosen = new JButton("...");
+		ActionListener al;
+		al = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				switch (fileChooser.showOpenDialog(CustomTCPConfigGui.this)) {
+				case JFileChooser.APPROVE_OPTION:
+					packagerPath.setText(fileChooser.getSelectedFile().getAbsolutePath());
+					packagerFile = fileChooser.getSelectedFile().getAbsolutePath();
+					log.info("packager file selected = " + packagerFile);
+					break;
+				}
+			}
+		};
+		btnChoosen.addActionListener(al);
 
+		JPanel channelPanel = new JPanel(new BorderLayout(5, 0));
+		channelPanel.add(packagerlabel, BorderLayout.WEST);
+		channelPanel.add(packagerPath, BorderLayout.CENTER);
+		channelPanel.add(btnChoosen, BorderLayout.EAST);
+		return channelPanel;
 	}
 	
-	public String getRequestData(){
-		return requestData.getText();
+	private JPanel createRequestDataPanel() {
+		JLabel reqlabel = new JLabel("Data:");
+
+		final JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setCurrentDirectory(new File(System
+				.getProperty("user.home")));
+//		fileChooser.setFileFilter(new FileFilter()
+//        {
+//           @Override
+//           public boolean accept(File file)
+//           {
+//              return file.getName().toUpperCase().equals(".PROPERTIES");
+//           }
+//
+//           @Override
+//           public String getDescription()
+//           {
+//              return ".properties files";
+//           }
+//        });
+		
+		final JLabel reqPath = new JLabel("");
+		JButton btnChoosen = new JButton("...");
+		ActionListener al;
+		al = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				switch (fileChooser.showOpenDialog(CustomTCPConfigGui.this)) {
+				case JFileChooser.APPROVE_OPTION:
+					reqPath.setText(fileChooser.getSelectedFile().getAbsolutePath());
+					fileRequestData = fileChooser.getSelectedFile().getAbsolutePath();
+					log.info("req file selected = " + fileRequestData);
+					break;
+				}
+			}
+		};
+		btnChoosen.addActionListener(al);
+
+		JPanel reqPanel = new JPanel(new BorderLayout(5, 0));
+		reqPanel.add(reqlabel, BorderLayout.WEST);
+		reqPanel.add(reqPath, BorderLayout.CENTER);
+		reqPanel.add(btnChoosen, BorderLayout.EAST);
+		return reqPanel;
 	}
 
-//	private JPanel createFilenamePanel()// Not used yet
-//	{
-//
-//		JLabel label = new JLabel(JMeterUtils.getResString("file_to_retrieve"));
-//
-//		filename = new JTextField(10);
-//		filename.setName(FILENAME);
-//		label.setLabelFor(filename);
-//
-//		JPanel filenamePanel = new JPanel(new BorderLayout(5, 0));
-//		filenamePanel.add(label, BorderLayout.WEST);
-//		filenamePanel.add(filename, BorderLayout.CENTER);
-//		return filenamePanel;
-//	}
+
+	private JPanel createChannelPanel() {
+		JLabel channellabel = new JLabel("Channel");
+
+		comboChannel = new JComboBox(CHANNEL_LIST);
+		comboChannel.setSelectedIndex(0);
+		channellabel.setLabelFor(comboChannel);
+
+		JPanel channelPanel = new JPanel(new BorderLayout(5, 0));
+		channelPanel.add(channellabel, BorderLayout.WEST);
+		channelPanel.add(comboChannel, BorderLayout.CENTER);
+		return channelPanel;
+	}
+
+	public String getChannel() {
+		String channel = (String) comboChannel.getSelectedItem();
+		return channel.trim().toLowerCase();
+	}
 
 	private void init() {
 		setLayout(new BorderLayout(0, 5));
@@ -195,14 +285,13 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		}
 
 		VerticalPanel mainPanel = new VerticalPanel();
+		mainPanel.add(createChannelPanel());
+		mainPanel.add(createPackagerPanel());
 		mainPanel.add(createServerPanel());
 		mainPanel.add(createPortPanel());
 		mainPanel.add(createTimeoutPanel());
-		mainPanel.add(createNoDelayPanel());
-		mainPanel.add(createRequestPanel());
+		mainPanel.add(createRequestDataPanel());
 
-		// mainPanel.add(createFilenamePanel());
 		add(mainPanel, BorderLayout.CENTER);
 	}
-
 }

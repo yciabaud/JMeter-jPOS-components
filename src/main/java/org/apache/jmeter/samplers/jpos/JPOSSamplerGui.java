@@ -12,6 +12,7 @@ import org.apache.log.Logger;
 /**
  *
  * @author apc
+ * "Erlangga" <erlangga258@gmail.com>
  */
 public class JPOSSamplerGui
         extends AbstractSamplerGui {
@@ -31,14 +32,12 @@ public class JPOSSamplerGui
     @Override
     public void configure(TestElement element) {
         super.configure(element);
-        log.info("running configure ,,,");
-        System.out.println("running configure ,,,");
+        log.info("running configure ,,,");        
         tcpDefaultPanel.configure(element);        
     }
 
     public TestElement createTestElement() {
     	log.info("running createTestElement ,,,");
-    	System.out.println("running createTestElement ,,,");
         JPOSSampler sampler = new JPOSSampler();
         modifyTestElement(sampler);
         return sampler;
@@ -53,11 +52,19 @@ public class JPOSSamplerGui
         //sampler.clear();
         //sampler.addTestElement(tcpDefaultPanel.createTestElement());  
     	log.info("running modifyTestElement ,,,");
-    	System.out.println("running modifyTestElement ,,,");
         sampler.setProperty(CustomTCPConfigGui.SERVER, tcpDefaultPanel.getServer());
         sampler.setProperty(CustomTCPConfigGui.PORT, tcpDefaultPanel.getPort());
         sampler.setProperty(CustomTCPConfigGui.TIMEOUT, tcpDefaultPanel.getTimeout());
-        sampler.setProperty(CustomTCPConfigGui.REQUEST, tcpDefaultPanel.getRequestData());
+        sampler.setProperty(CustomTCPConfigGui.CHANNEL_KEY, tcpDefaultPanel.getChannel());
+        
+        if(tcpDefaultPanel.getPackagerFile()!=null){
+        	sampler.setProperty(CustomTCPConfigGui.PACKAGER_KEY, tcpDefaultPanel.getPackagerFile());
+        }
+        
+        if(tcpDefaultPanel.getRequestFile()!=null){
+        	sampler.setProperty(CustomTCPConfigGui.REQ_KEY, tcpDefaultPanel.getRequestFile());
+        }
+        
         this.configureTestElement(sampler);
     }
 

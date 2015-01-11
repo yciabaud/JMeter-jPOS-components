@@ -1,16 +1,11 @@
 package org.apache.jmeter.iso.manager;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
+import org.jpos.iso.BaseChannel;
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMUX;
 import org.jpos.iso.ISOMsg;
-import org.jpos.iso.ISOPackager;
-import org.jpos.iso.ISOUtil;
-import org.jpos.iso.channel.NACChannel;
 
 /**
  * @author erlangga
@@ -23,19 +18,18 @@ public class ISOMUXSingleton {
     private static final Logger logger = LoggingManager.getLoggerForClass();
     
 //    private static Thread threadIsoMux;
-    private static ExecutorService executor; // Better solutions for running threads
+//    private static ExecutorService executor; // Better solutions for running threads
 	
-	public static ISOMUXSingleton getInstance(ISOPackager packager, final String hostname, final int port,final String header){
+	public static ISOMUXSingleton getInstance(final BaseChannel channel){
 		if(INSTANCE==null){
 			logger.info("Call ISOMUXSingleton getInstance()");
 			synchronized (ISOMUXSingleton.class) {
-				if(INSTANCE==null){			
-					logger.info("getInstance (hostname = " + hostname + ", port = " + port+")");
-					NACChannel channel = new NACChannel(hostname, port, packager, ISOUtil.hex2byte(header));
+				if(INSTANCE==null){
+					logger.info("ISOMUXSingleton instanceciated");
 					INSTANCE = new ISOMUXSingleton(channel);
 					
-					executor = Executors.newSingleThreadExecutor();
-					executor.execute(INSTANCE.getISOMUX());
+//					executor = Executors.newSingleThreadExecutor();
+//					executor.execute(INSTANCE.getISOMUX());
 					
 //					threadIsoMux = new Thread(INSTANCE.getISOMUX());		
 //					logger.info("start thread iso mux");
@@ -46,7 +40,7 @@ public class ISOMUXSingleton {
 		return INSTANCE;
 	}
 
-	private ISOMUXSingleton(final NACChannel channel){
+	private ISOMUXSingleton(final BaseChannel channel){
 		isoMux = new ISOMUX(channel) {
 			@Override
 			protected String getKey(ISOMsg m) throws ISOException {
@@ -73,10 +67,10 @@ public class ISOMUXSingleton {
 //			threadIsoMux = null;
 //		}
 		
-		if(executor!=null){
-			executor.shutdown();
-			executor = null;
-		}
+//		if(executor!=null){
+//			executor.shutdown();
+//			executor = null;
+//		}
 		
 		if(INSTANCE!=null){
 			INSTANCE = null;
