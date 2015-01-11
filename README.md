@@ -31,7 +31,8 @@ You might also be interested in http://code.google.com/p/jmeter-plugins/ for dat
 
 # See Mom
 
+On the plugin jpos sampler ...
+
 Packager field defines your iso packager in the program, usually using xml type. You can look this example at https://www.dropbox.com/s/oww38tt8e9xf39s/iso87binary.xml?dl=0
 
-Data field defines your set request field iso 8583. You must set request field iso 8583 in this file, and using *.properties extension. You can look this example at 
-https://www.dropbox.com/s/eztf5m2zh1p1v3y/iso.properties?dl=0
+Data field defines your set request field iso 8583. You must set request field iso 8583 in this file, and using *.properties extension. You can look this example at https://www.dropbox.com/s/eztf5m2zh1p1v3y/iso.properties?dl=0
