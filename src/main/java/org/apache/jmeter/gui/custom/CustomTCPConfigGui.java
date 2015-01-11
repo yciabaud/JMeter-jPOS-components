@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -162,6 +163,22 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		PortPanel.add(port, BorderLayout.CENTER);
 		return PortPanel;
 	}
+	
+	private JPanel createAuthorPanel(){
+		Box verticalBox = Box.createVerticalBox();
+		
+		JLabel authorLabel = new JLabel("Author:");
+		JLabel yoanLabel = new JLabel("Yoann Ciabaud < y.ciabaud@gmail.com >");
+		JLabel erlanggaLabel = new JLabel("Erlangga < erlangga258@gmail.com >");
+		
+		verticalBox.add(authorLabel);
+		verticalBox.add(yoanLabel);
+		verticalBox.add(erlanggaLabel);
+					
+		JPanel authorPanel = new JPanel(new BorderLayout(5, 0));
+		authorPanel.add(verticalBox, BorderLayout.CENTER);
+		return authorPanel;
+	}
 
 	public String getPort() {
 		return port.getText();
@@ -291,6 +308,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		mainPanel.add(createPortPanel());
 		mainPanel.add(createTimeoutPanel());
 		mainPanel.add(createRequestDataPanel());
+		mainPanel.add(createAuthorPanel());
 
 		add(mainPanel, BorderLayout.CENTER);
 	}

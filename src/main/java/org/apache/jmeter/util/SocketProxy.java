@@ -42,7 +42,6 @@ public class SocketProxy implements SocketInterface {
 
 	public ISOMsg isoRequest(final ISOMsg isoMsg, final int timeout) {		
 		logger.info("masuk iso request ...");
-		System.out.println("masuk iso request ...");
 		if(!isoMux.isConnected()){
 			try {
 				isoMux.getISOChannel().reconnect();
@@ -52,21 +51,18 @@ public class SocketProxy implements SocketInterface {
 				
 		ISORequest req = new ISORequest(isoMsg);		
 		isoMux.queue(req);		
-		System.out.println("----Get Request----");
 		logger.info("----Get Request----");
 		logISOMsg(isoMsg);
-		// default = 30*1000
 		ISOMsg isoReply = req.getResponse(timeout);
         if (isoReply != null) {
-        	System.out.println("----Get Response----");
         	logger.info("----Get Response----");
         	logISOMsg(isoReply);
         }        
 		return isoReply;
 	}
 
-	public void dispose() {		
-//		isoMux = null;
-//		threadIsoMux = null;
+	@Override
+	public void dispose() {
+		
 	}
 }

@@ -56,11 +56,10 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	}
 
 	public void initialize() throws Exception {
-		log.info("call initilalize() ...");
-		//logJMeter();
+		log.info("call initilalize() ...");		
+		processPackagerFile();
+		processDataRequest();		
 		if (customPackager != null) {
-			log.info("custom packager is not null");
-
 			String server = getPropertyAsString(CustomTCPConfigGui.SERVER);
 			String port = getPropertyAsString(CustomTCPConfigGui.PORT);
 			String channel = getPropertyAsString(CustomTCPConfigGui.CHANNEL_KEY);
@@ -154,19 +153,21 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 				log.info("iso response is not null");
 				String response = logISOMsg(isoResponse);
 				if (response != null) {
+					res.setResponseData(response);
 					res.setResponseMessage(response);
 				}
 				res.setResponseCodeOK();
 				isOK = true;
 			} else {
-				log.info("iso response is null or timeout");
 				isOK = false;
+				res.setResponseData("timeout cuy ...");
 				res.setResponseMessage("timeout");
 			}
 		} catch (ISOException e1) {
 			log.error(e1.getMessage());
 			isOK = false;
 			res.setResponseMessage(e1.getMessage());
+			res.setResponseData(e1.getMessage());
 		}
 
 		res.sampleEnd();
@@ -258,8 +259,6 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	@Override
 	public void testStarted() {
 		log.info("call testStarted()");
-		processPackagerFile();
-		processDataRequest();
 	}
 
 	private void processDataRequest() {
@@ -299,8 +298,9 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 				try {
 					InputStream targetStream = new FileInputStream(initialFile);
 					if (targetStream != null) {
+						log.info("targetStream is not null");
 						customPackager = new GenericPackager(targetStream);
-					}
+					}				
 				} catch (FileNotFoundException e) {
 					log.warn(e.getMessage());
 					e.printStackTrace();
