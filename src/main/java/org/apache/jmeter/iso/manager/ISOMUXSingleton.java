@@ -1,5 +1,8 @@
 package org.apache.jmeter.iso.manager;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 import org.jpos.iso.BaseChannel;
@@ -18,7 +21,7 @@ public class ISOMUXSingleton {
     private static final Logger logger = LoggingManager.getLoggerForClass();
     
 //    private static Thread threadIsoMux;
-//    private static ExecutorService executor; // Better solutions for running threads
+    private static ExecutorService executor; // Better solutions for running threads
 	
 	public static ISOMUXSingleton getInstance(final BaseChannel channel){
 		if(INSTANCE==null){
@@ -28,8 +31,8 @@ public class ISOMUXSingleton {
 					logger.info("ISOMUXSingleton instanceciated");
 					INSTANCE = new ISOMUXSingleton(channel);
 					
-//					executor = Executors.newSingleThreadExecutor();
-//					executor.execute(INSTANCE.getISOMUX());
+					executor = Executors.newSingleThreadExecutor();
+					executor.execute(INSTANCE.getISOMUX());
 					
 //					threadIsoMux = new Thread(INSTANCE.getISOMUX());		
 //					logger.info("start thread iso mux");
@@ -67,10 +70,10 @@ public class ISOMUXSingleton {
 //			threadIsoMux = null;
 //		}
 		
-//		if(executor!=null){
-//			executor.shutdown();
-//			executor = null;
-//		}
+		if(executor!=null){
+			executor.shutdown();
+			executor = null;
+		}
 		
 		if(INSTANCE!=null){
 			INSTANCE = null;

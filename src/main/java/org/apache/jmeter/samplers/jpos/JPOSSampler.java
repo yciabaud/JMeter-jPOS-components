@@ -6,8 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.jmeter.gui.custom.CustomTCPConfigGui;
 import org.apache.jmeter.iso.manager.ISOMUXSingleton;
@@ -47,12 +45,10 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 
 	private ISOPackager customPackager;
 	private Properties reqProp;
-	private static ExecutorService exService;
 
 	public JPOSSampler() {
 		// Default value for TCP Client
 		setClassname(LengthPrefixedBinaryTCPClientImpl.class.getName());
-		exService = Executors.newCachedThreadPool();
 	}
 
 	public void initialize() throws Exception {
@@ -142,8 +138,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 
 		SocketInterface socket = null;
 		ISOMUX isoMUX = isoMUXSingleton.getISOMUX();
-		try {			
-			exService.submit(isoMUX); // submit to thread pool			
+		try {
 			socket = new SocketProxy(isoMUX);
 			ISOMsg isoReq = buildISOMsg();
 			log.info("Sending Time : " + FieldUtil.getDate());
@@ -229,11 +224,6 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	public void testEnded() {
 		log.info("call testEnded()");
 		isoMUXSingleton.terminate();
-
-		if (exService != null) {
-			exService.shutdown();
-			exService = null;
-		}
 	}
 
 	@Override
@@ -298,7 +288,6 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 				try {
 					InputStream targetStream = new FileInputStream(initialFile);
 					if (targetStream != null) {
-						log.info("targetStream is not null");
 						customPackager = new GenericPackager(targetStream);
 					}				
 				} catch (FileNotFoundException e) {
