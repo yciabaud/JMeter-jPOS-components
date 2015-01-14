@@ -40,7 +40,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	private static final Logger log = LoggingManager.getLoggerForClass();
 	private final static String HEXES = "0123456789ABCDEF";
 	private boolean initialized = false;
-	private ISOMUXSingleton isoMUXSingleton;
+	private static ISOMUXSingleton isoMUXSingleton;
 
 	private static final Integer MAX_ISOBIT = Integer.valueOf(128);
 	// private static final Integer MAX_NESTED_ISOBIT = Integer.valueOf(64);
@@ -50,6 +50,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	private static ExecutorService exService;
 
 	public JPOSSampler() {
+		log.info("call constructor() ...");
 		// Default value for TCP Client
 		setClassname(LengthPrefixedBinaryTCPClientImpl.class.getName());
 		exService = Executors.newCachedThreadPool();
@@ -60,6 +61,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		processPackagerFile();
 		processDataRequest();		
 		if (customPackager != null) {
+			log.info("customPackager is not null ...");
 			String server = getPropertyAsString(CustomTCPConfigGui.SERVER);
 			String port = getPropertyAsString(CustomTCPConfigGui.PORT);
 			String channel = getPropertyAsString(CustomTCPConfigGui.CHANNEL_KEY);
@@ -150,24 +152,20 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 			ISOMsg isoResponse = socket.isoRequest(isoReq, intTimeOut);
 			log.info("Receive\t: " + FieldUtil.getDate());
 			if (isoResponse != null) {
-				log.info("iso response is not null");
+				//log.info("iso response is not null");
 				String response = logISOMsg(isoResponse);
 				if (response != null) {
-					res.setResponseData(response);
 					res.setResponseMessage(response);
 				}
 				res.setResponseCodeOK();
 				isOK = true;
 			} else {
 				isOK = false;
-				res.setResponseData("timeout cuy ...");
 				res.setResponseMessage("timeout");
 			}
 		} catch (ISOException e1) {
-			log.error(e1.getMessage());
 			isOK = false;
 			res.setResponseMessage(e1.getMessage());
-			res.setResponseData(e1.getMessage());
 		}
 
 		res.sampleEnd();
@@ -188,6 +186,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 			}
 		} catch (ISOException e) {
 			e.printStackTrace();
+			sBuffer.append(e.getMessage());
 		} finally {
 			sBuffer.append("--------------------\n");
 		}
@@ -227,10 +226,17 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 
 	@Override
 	public void testEnded() {
-		log.info("call testEnded()");
-		isoMUXSingleton.terminate();
+		log.info("call testEnded()");	
+		if(isoMUXSingleton!=null){
+			log.info("isoMUXSingleton is not null");
+			isoMUXSingleton.terminate();			
+			isoMUXSingleton = null;
+		}else{
+			log.info("isoMUXSingleton is null");
+		}
 
 		if (exService != null) {
+			log.info("exService is not null");
 			exService.shutdown();
 			exService = null;
 		}

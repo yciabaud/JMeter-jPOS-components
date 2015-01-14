@@ -58,7 +58,9 @@ public class ISOMUXSingleton {
 	}
 	
 	public void terminate(){
+		logger.info("terminate()");
 		if(isoMux!=null){
+			logger.info("isoMux is not null");
 			isoMux.terminate();		
 			isoMux = null;
 		}
@@ -73,6 +75,7 @@ public class ISOMUXSingleton {
 //		}
 		
 		if(INSTANCE!=null){
+			logger.info("INSTANCE is not null");
 			INSTANCE = null;
 		}		
 	}	
