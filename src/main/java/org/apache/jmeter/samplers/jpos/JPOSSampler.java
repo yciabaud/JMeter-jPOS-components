@@ -46,14 +46,12 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	// private static final Integer MAX_NESTED_ISOBIT = Integer.valueOf(64);
 
 	private ISOPackager customPackager;
-	private Properties reqProp;
-	private static ExecutorService exService;
+	private Properties reqProp;	
 
 	public JPOSSampler() {
 		log.info("call constructor() ...");
 		// Default value for TCP Client
 		setClassname(LengthPrefixedBinaryTCPClientImpl.class.getName());
-		exService = Executors.newCachedThreadPool();
 	}
 
 	public void initialize() throws Exception {
@@ -145,7 +143,6 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		SocketInterface socket = null;
 		ISOMUX isoMUX = isoMUXSingleton.getISOMUX();
 		try {			
-			exService.submit(isoMUX); // submit to thread pool			
 			socket = new SocketProxy(isoMUX);
 			ISOMsg isoReq = buildISOMsg();
 			log.info("Sending Time : " + FieldUtil.getDate());
@@ -233,12 +230,6 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 			isoMUXSingleton = null;
 		}else{
 			log.info("isoMUXSingleton is null");
-		}
-
-		if (exService != null) {
-			log.info("exService is not null");
-			exService.shutdown();
-			exService = null;
 		}
 	}
 
