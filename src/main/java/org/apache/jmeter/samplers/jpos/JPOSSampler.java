@@ -5,10 +5,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.jmeter.gui.custom.CustomTCPConfigGui;
-import org.apache.jmeter.iso.manager.ISOMUXSingleton;
 import org.apache.jmeter.iso.manager.SocketInterface;
 import org.apache.jmeter.protocol.tcp.sampler.LengthPrefixedBinaryTCPClientImpl;
 import org.apache.jmeter.protocol.tcp.sampler.TCPSampler;
@@ -37,14 +40,17 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 
 	private static final Logger log = LoggingManager.getLoggerForClass();
 	private final static String HEXES = "0123456789ABCDEF";
-	private boolean initialized = false;
-	private ISOMUXSingleton isoMUXSingleton;
+	private boolean initialized = false;	
+	private Map<String, ISOMUX> isoMuxMap;
 
 	private static final Integer MAX_ISOBIT = Integer.valueOf(128);
 	// private static final Integer MAX_NESTED_ISOBIT = Integer.valueOf(64);
 
 	private ISOPackager customPackager;
-	private Properties reqProp;
+	private Properties reqProp;	
+	
+	private ISOMUX isoMUX;
+	private static final ExecutorService EX_SERVICE = Executors.newCachedThreadPool();
 
 	public JPOSSampler() {
 		// Default value for TCP Client
@@ -58,7 +64,8 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		if (customPackager != null) {
 			String server = getPropertyAsString(CustomTCPConfigGui.SERVER);
 			String port = getPropertyAsString(CustomTCPConfigGui.PORT);
-			String channel = getPropertyAsString(CustomTCPConfigGui.CHANNEL_KEY);
+			String channel = getPropertyAsString(CustomTCPConfigGui.CHANNEL_KEY);		
+			final String threadName = JMeterContextService.getContext().getThread().getThreadName();
 
 			ChannelHelper channelHelper = new ChannelHelper();
 			String header = reqProp.getProperty("header");
@@ -67,12 +74,23 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 			} else {
 				channelHelper.setTpdu("0000000000"); // default
 			}
-
-			BaseChannel baseChannel = channelHelper.getChannel(server,
-					Integer.parseInt(port), customPackager, channel);
-			isoMUXSingleton = ISOMUXSingleton.getInstance(baseChannel);
+			
+			if(isoMuxMap.containsKey(threadName)){
+				isoMUX = isoMuxMap.get(threadName);
+			}else{
+				BaseChannel baseChannel = channelHelper.getChannel(server,
+						Integer.parseInt(port), customPackager, channel);			
+				isoMUX = new ISOMUX(baseChannel){
+					@Override
+					protected String getKey(ISOMsg m) throws ISOException {
+						return super.getKey(m);
+					}
+				};
+				isoMuxMap.put(threadName, isoMUX);
+			}			
+			EX_SERVICE.execute(isoMUX);
+			initialized = true;
 		}
-		initialized = true;
 	}
 
 	private ISOMsg buildISOMsg() throws ISOException {
@@ -121,7 +139,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		if (!initialized) {
 			try {
 				initialize();
-			} catch (Exception e1) {
+			} catch (Exception e1) {				
 				res.setResponseMessage(e1.getMessage());
 				res.setSuccessful(false);
 				return res;
@@ -137,32 +155,40 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		res.sampleStart();
 
 		SocketInterface socket = null;
-		ISOMUX isoMUX = isoMUXSingleton.getISOMUX();
-		try {
-			socket = new SocketProxy(isoMUX);
-			ISOMsg isoReq = buildISOMsg();
-			log.info("Sending Time : " + FieldUtil.getDate());
-			ISOMsg isoResponse = socket.isoRequest(isoReq, intTimeOut);
-			log.info("Receive\t: " + FieldUtil.getDate());
-			if (isoResponse != null) {
-				log.info("iso response is not null");
-				String response = logISOMsg(isoResponse);
-				if (response != null) {
-					res.setResponseData(response);
-					res.setResponseMessage(response);
+		try {			
+			if(isoMUX.isConnected()){
+				socket = new SocketProxy(isoMUX);
+				ISOMsg isoReq = buildISOMsg();
+				log.info("Sending Time : " + FieldUtil.getDate());
+				ISOMsg isoResponse = socket.isoRequest(isoReq, intTimeOut);
+				log.info("Receive\t: " + FieldUtil.getDate());
+				if (isoResponse != null) {
+					log.info("iso response is not null");
+					String response = logISOMsg(isoResponse);
+					if (response != null) {
+						res.setResponseMessage(response);
+					}
+					res.setResponseCodeOK();
+					isOK = true;
+				} else {
+					isOK = false;
+					res.setResponseMessage("timeout");
 				}
-				res.setResponseCodeOK();
-				isOK = true;
-			} else {
-				isOK = false;
-				res.setResponseData("timeout cuy ...");
-				res.setResponseMessage("timeout");
+			}else{
+				try {
+					initialize();
+				} catch (Exception e1) {
+					log.error(e1.getMessage());
+					res.setResponseMessage(e1.getMessage());
+					res.setSuccessful(false);
+					return res;
+				}
 			}
 		} catch (ISOException e1) {
 			log.error(e1.getMessage());
-			isOK = false;
 			res.setResponseMessage(e1.getMessage());
-			res.setResponseData(e1.getMessage());
+			res.setSuccessful(false);
+			return res;
 		}
 
 		res.sampleEnd();
@@ -223,11 +249,17 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	@Override
 	public void testEnded() {
 		log.info("call testEnded()");
-		isoMUXSingleton.terminate();
+		testEnded("");
 	}
 
 	@Override
 	public void testEnded(String arg0) {
+		for(ISOMUX isoMux : isoMuxMap.values()){
+			if(isoMux!=null){
+				isoMux.terminate();
+				isoMux = null;
+			}
+		}
 	}
 
 	private void logJMeter() {
@@ -249,6 +281,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	@Override
 	public void testStarted() {
 		log.info("call testStarted()");
+		testStarted("");
 	}
 
 	private void processDataRequest() {
@@ -305,5 +338,6 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 
 	@Override
 	public void testStarted(String arg0) {
+		isoMuxMap = new ConcurrentHashMap<String, ISOMUX>();
 	}
 }

@@ -31,9 +31,9 @@ public class JPOSSamplerGui
 
     @Override
     public void configure(TestElement element) {
-        super.configure(element);
         log.info("running configure ,,,");        
-        tcpDefaultPanel.configure(element);        
+        tcpDefaultPanel.configure(element);
+        super.configure(element);
     }
 
     public TestElement createTestElement() {
@@ -41,33 +41,24 @@ public class JPOSSamplerGui
         JPOSSampler sampler = new JPOSSampler();
         modifyTestElement(sampler);
         return sampler;
-    }
+    }       
 
-    /**
+    @Override
+	public void clearGui() {
+		super.clearGui();
+		tcpDefaultPanel.clearGui();
+	}
+
+	/**
      * Modifies a given TestElement to mirror the data in the gui components.
      *
      * @see org.apache.jmeter.gui.JMeterGUIComponent#modifyTestElement(TestElement)
      */
     public void modifyTestElement(TestElement sampler) {
-        //sampler.clear();
-        //sampler.addTestElement(tcpDefaultPanel.createTestElement());  
     	log.info("running modifyTestElement ,,,");
-        sampler.setProperty(CustomTCPConfigGui.SERVER, tcpDefaultPanel.getServer());
-        sampler.setProperty(CustomTCPConfigGui.PORT, tcpDefaultPanel.getPort());
-        sampler.setProperty(CustomTCPConfigGui.TIMEOUT, tcpDefaultPanel.getTimeout());
-        sampler.setProperty(CustomTCPConfigGui.CHANNEL_KEY, tcpDefaultPanel.getChannel());
-        
-        if(tcpDefaultPanel.getPackagerFile()!=null){
-        	sampler.setProperty(CustomTCPConfigGui.PACKAGER_KEY, tcpDefaultPanel.getPackagerFile());
-        }
-        
-        if(tcpDefaultPanel.getRequestFile()!=null){
-        	sampler.setProperty(CustomTCPConfigGui.REQ_KEY, tcpDefaultPanel.getRequestFile());
-        }
-        
-        this.configureTestElement(sampler);
+    	tcpDefaultPanel.modifyTestElement(sampler);              
     }
-
+    
     private void init() {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());

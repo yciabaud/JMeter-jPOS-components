@@ -14,10 +14,12 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
+import org.apache.jmeter.gui.util.FileDialoger;
 import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.protocol.tcp.sampler.TCPSampler;
 import org.apache.jmeter.testelement.TestElement;
@@ -41,6 +43,10 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	private JTextField port;
 	private JTextField timeout;
 	private JComboBox comboChannel;
+	private JTextArea sendISO;
+	private JLabel packagerPath;
+	private JLabel reqPath;
+	
 	private String packagerFile;
 	private String fileRequestData;
 	
@@ -53,6 +59,20 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	public CustomTCPConfigGui() {
 		this(true);
 	}
+	
+	@Override
+	public void clearGui() {
+		super.clearGui();
+		
+		server.setText("");
+		port.setText("");
+		timeout.setText("");
+		packagerPath.setText("");
+		reqPath.setText("");
+		packagerFile = "";
+		fileRequestData = "";
+		comboChannel.setSelectedIndex(0);
+	}
 
 	public CustomTCPConfigGui(boolean displayName) {
 		this.displayName = displayName;
@@ -64,18 +84,20 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	}
 
 	public void configure(TestElement element) {
-		super.configure(element);
 		server.setText(element.getPropertyAsString(TCPSampler.SERVER));
 		port.setText(element.getPropertyAsString(TCPSampler.PORT));
 		timeout.setText(element.getPropertyAsString(TCPSampler.TIMEOUT));
 		
 		if(element.getPropertyAsString(PACKAGER_KEY)!=null){
 			packagerFile = element.getPropertyAsString(PACKAGER_KEY);
+			packagerPath.setText(packagerFile);
 		}
 		
 		if(element.getPropertyAsString(REQ_KEY)!=null){
 			fileRequestData = element.getPropertyAsString(REQ_KEY);
+			reqPath.setText(fileRequestData);
 		}		
+		super.configure(element);
 	}
 
 	public TestElement createTestElement() {
@@ -90,20 +112,21 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	 * @see org.apache.jmeter.gui.JMeterGUIComponent#modifyTestElement(TestElement)
 	 */
 	public void modifyTestElement(TestElement element) {
+		element.clear();
 		configureTestElement(element);
 		element.setProperty(TCPSampler.SERVER, server.getText());
 		element.setProperty(TCPSampler.PORT, port.getText());
 		element.setProperty(TCPSampler.TIMEOUT, timeout.getText());		
 		
 		if(packagerFile!=null){
-			element.setProperty(PACKAGER_KEY, packagerFile);
+			element.setProperty(PACKAGER_KEY, packagerPath.getText());
 		}		
 		if(fileRequestData!=null){
-			element.setProperty(REQ_KEY, fileRequestData);
+			element.setProperty(REQ_KEY, reqPath.getText());
 		}
 	}
 
-	private JPanel createTimeoutPanel() {
+	private JPanel getTimeoutPanel() {
 		JLabel label = new JLabel(JMeterUtils.getResString("tcp_timeout"));
 
 		timeout = new JTextField(10);
@@ -134,7 +157,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		return null;
 	}
 
-	private JPanel createServerPanel() {
+	private JPanel getServerPanel() {
 		JLabel label = new JLabel(JMeterUtils.getResString("server"));
 
 		server = new JTextField(10);
@@ -151,7 +174,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		return server.getText();
 	}
 
-	private JPanel createPortPanel() {
+	private JPanel getPortPanel() {
 		JLabel label = new JLabel(JMeterUtils.getResString("tcp_port"));
 
 		port = new JTextField(10);
@@ -164,7 +187,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		return PortPanel;
 	}
 	
-	private JPanel createAuthorPanel(){
+	private JPanel getAuthorPanel(){
 		Box verticalBox = Box.createVerticalBox();
 		
 		JLabel authorLabel = new JLabel("Author:");
@@ -183,45 +206,31 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	public String getPort() {
 		return port.getText();
 	}
-
-	private JPanel createPackagerPanel() {
-		JLabel packagerlabel = new JLabel("Packager:");
-
-		final JFileChooser fileChooser = new JFileChooser();
-		fileChooser.setCurrentDirectory(new File(System
-				.getProperty("user.home")));
-//		fileChooser.setFileFilter(new FileFilter()
-//        {
-//           @Override
-//           public boolean accept(File file)
-//           {
-//              return file.getName().toUpperCase().equals(".XML");
-//           }
-//
-//           @Override
-//           public String getDescription()
-//           {
-//              return ".xml files";
-//           }
-//        });
-		
-		final JLabel packagerPath = new JLabel("");
-		JButton btnChoosen = new JButton("...");
+	
+	/*
+	 * https://jmeter.apache.org/api/org/apache/jmeter/gui/util/FileDialoger.html
+	 */
+	private JPanel getPackagerFileDialoger() {		
+		JLabel packagerlabel = new JLabel("Packager:");		
+		packagerPath = new JLabel("");
+		final JButton btnChoosen = new JButton("...");
 		ActionListener al;
 		al = new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent ae) {
-				switch (fileChooser.showOpenDialog(CustomTCPConfigGui.this)) {
-				case JFileChooser.APPROVE_OPTION:
-					packagerPath.setText(fileChooser.getSelectedFile().getAbsolutePath());
-					packagerFile = fileChooser.getSelectedFile().getAbsolutePath();
-					log.info("packager file selected = " + packagerFile);
-					break;
-				}
+			public void actionPerformed(ActionEvent ae) {				
+				if(ae.getSource() == btnChoosen){
+					JFileChooser chooser = FileDialoger.promptToOpenFile(new String[]{"xml"});
+					if(chooser!=null){
+						packagerPath.setText(chooser.getSelectedFile().getAbsolutePath());
+						packagerFile = chooser.getSelectedFile().getAbsolutePath();
+						log.info("packager file selected = " + packagerFile);
+					}else{
+						return;
+					}
+				}				
 			}
 		};
 		btnChoosen.addActionListener(al);
-
 		JPanel channelPanel = new JPanel(new BorderLayout(5, 0));
 		channelPanel.add(packagerlabel, BorderLayout.WEST);
 		channelPanel.add(packagerPath, BorderLayout.CENTER);
@@ -229,27 +238,42 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		return channelPanel;
 	}
 	
-	private JPanel createRequestDataPanel() {
-		JLabel reqlabel = new JLabel("Data:");
+	private JPanel getRequestDataFromPropertiesFileDialoger() {
+		JLabel reqlabel = new JLabel("Data:");		
+		reqPath = new JLabel("");
+		final JButton btnChoosen = new JButton("...");
+		ActionListener al;
+		al = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				if(ae.getSource()==btnChoosen){
+					JFileChooser chooser = FileDialoger.promptToOpenFile(new String[]{"properties"});
+					if(chooser!=null){
+						reqPath.setText(chooser.getSelectedFile().getAbsolutePath());
+						fileRequestData = chooser.getSelectedFile().getAbsolutePath();
+						log.info("req file selected = " + fileRequestData);
+					}else{
+						return;
+					}
+				}
+			}
+		};
+		btnChoosen.addActionListener(al);
+
+		JPanel reqPanel = new JPanel(new BorderLayout(5, 0));
+		reqPanel.add(reqlabel, BorderLayout.WEST);
+		reqPanel.add(reqPath, BorderLayout.CENTER);
+		reqPanel.add(btnChoosen, BorderLayout.EAST);
+		return reqPanel;
+	}
+
+	
+	private JPanel getSendISOPanel() {
+		JLabel reqlabel = new JLabel("Field:");
 
 		final JFileChooser fileChooser = new JFileChooser();
 		fileChooser.setCurrentDirectory(new File(System
-				.getProperty("user.home")));
-//		fileChooser.setFileFilter(new FileFilter()
-//        {
-//           @Override
-//           public boolean accept(File file)
-//           {
-//              return file.getName().toUpperCase().equals(".PROPERTIES");
-//           }
-//
-//           @Override
-//           public String getDescription()
-//           {
-//              return ".properties files";
-//           }
-//        });
-		
+				.getProperty("user.home")));		
 		final JLabel reqPath = new JLabel("");
 		JButton btnChoosen = new JButton("...");
 		ActionListener al;
@@ -275,7 +299,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	}
 
 
-	private JPanel createChannelPanel() {
+	private JPanel getChannelPanel() {
 		JLabel channellabel = new JLabel("Channel");
 
 		comboChannel = new JComboBox(CHANNEL_LIST);
@@ -302,13 +326,13 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		}
 
 		VerticalPanel mainPanel = new VerticalPanel();
-		mainPanel.add(createChannelPanel());
-		mainPanel.add(createPackagerPanel());
-		mainPanel.add(createServerPanel());
-		mainPanel.add(createPortPanel());
-		mainPanel.add(createTimeoutPanel());
-		mainPanel.add(createRequestDataPanel());
-		mainPanel.add(createAuthorPanel());
+		mainPanel.add(getChannelPanel());
+		mainPanel.add(getPackagerFileDialoger());
+		mainPanel.add(getServerPanel());
+		mainPanel.add(getPortPanel());
+		mainPanel.add(getTimeoutPanel());
+		mainPanel.add(getRequestDataFromPropertiesFileDialoger());
+		mainPanel.add(getAuthorPanel());
 
 		add(mainPanel, BorderLayout.CENTER);
 	}
