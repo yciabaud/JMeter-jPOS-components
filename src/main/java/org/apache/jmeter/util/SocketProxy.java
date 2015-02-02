@@ -25,19 +25,19 @@ public class SocketProxy implements SocketInterface {
 	}
 	
 	private static void logISOMsg(ISOMsg msg) {		
-		logger.info("----ISO MESSAGE-----");
-		try {
-			logger.info("  MTI : " + msg.getMTI());
-			for (int i=1;i<=msg.getMaxField();i++) {
-				if (msg.hasField(i)) {
-					logger.info("Field-"+i+" : "+msg.getString(i)+", Length : "+msg.getString(i).length());
-				}
-			}
-		} catch (ISOException e) {
-			e.printStackTrace();
-		} finally {
-			logger.info("--------------------");
-		}
+//		logger.info("----ISO MESSAGE-----");
+//		try {
+//			logger.info("  MTI : " + msg.getMTI());
+//			for (int i=1;i<=msg.getMaxField();i++) {
+//				if (msg.hasField(i)) {
+//					logger.info("Field-"+i+" : "+msg.getString(i)+", Length : "+msg.getString(i).length());
+//				}
+//			}
+//		} catch (ISOException e) {
+//			e.printStackTrace();
+//		} finally {
+//			logger.info("--------------------");
+//		}
 	}
 
 	public ISOMsg isoRequest(final ISOMsg isoMsg, final int timeout) {		
@@ -51,12 +51,12 @@ public class SocketProxy implements SocketInterface {
 				
 		ISORequest req = new ISORequest(isoMsg);		
 		isoMux.queue(req);		
-		logger.info("----Get Request----");
-		logISOMsg(isoMsg);
+		//logger.info("----Get Request----");
+		//logISOMsg(isoMsg);
 		ISOMsg isoReply = req.getResponse(timeout);
         if (isoReply != null) {
-        	logger.info("----Get Response----");
-        	logISOMsg(isoReply);
+        	//logger.info("----Get Response----");
+        	//logISOMsg(isoReply);
         }        
 		return isoReply;
 	}
