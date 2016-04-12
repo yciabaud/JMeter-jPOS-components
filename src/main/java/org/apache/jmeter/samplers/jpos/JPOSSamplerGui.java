@@ -12,7 +12,7 @@ import org.apache.log.Logger;
 /**
  *
  * @author apc
- * "Erlangga" <erlangga258@gmail.com>
+ * @author "Erlangga" <erlangga258@gmail.com>
  */
 public class JPOSSamplerGui
         extends AbstractSamplerGui {
