@@ -23,7 +23,7 @@ public class ChannelHelper {
 	
 	public BaseChannel getChannel(final String host, final int port, final ISOPackager packager, final String channelName){
 		BaseChannel baseChannel = null;
-		if(channelName.equals("nacchannel")){
+		if(channelName.equalsIgnoreCase("nacchannel")){
 			baseChannel = new NACChannel(host, port, packager, ISOUtil.hex2byte(tpdu));
 		}
 		return baseChannel;

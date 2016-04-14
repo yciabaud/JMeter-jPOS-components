@@ -17,7 +17,7 @@ import org.apache.log.Logger;
 public class JPOSSamplerGui
         extends AbstractSamplerGui {
 
-    public static final String J_POS_SAMPLER_LABEL = "jPOS Sampler V013";
+    public static final String J_POS_SAMPLER_LABEL = "jPOS Sampler";
     private CustomTCPConfigGui tcpDefaultPanel;
     private static final Logger log = LoggingManager.getLoggerForClass();
     
@@ -32,13 +32,13 @@ public class JPOSSamplerGui
 
     @Override
     public void configure(TestElement element) {
-        log.info("running configure ,,,");        
+        log.info("running configure ...");
         tcpDefaultPanel.configure(element);
         super.configure(element);
     }
 
     public TestElement createTestElement() {
-    	log.info("running createTestElement ,,,");
+    	log.info("running createTestElement ...");
         JPOSSampler sampler = new JPOSSampler();
         modifyTestElement(sampler);
         return sampler;

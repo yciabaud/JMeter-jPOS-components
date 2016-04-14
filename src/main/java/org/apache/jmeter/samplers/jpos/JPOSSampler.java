@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -188,6 +189,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 			if (isoRes != null) {
 				res.setResponseMessage(LOGGERISOMsg(isoRes));
 				res.setResponseCodeOK();
+				res.setResponseData(LOGGERISOMsg(isoRes), StandardCharsets.UTF_8.name());
 				res.setSuccessful(true);
 			}
 		} catch (ISOException e1) {
