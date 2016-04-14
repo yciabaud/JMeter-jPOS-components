@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,43 +29,47 @@ import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMUX;
 import org.jpos.iso.ISOMsg;
 import org.jpos.iso.ISOPackager;
+import org.jpos.iso.channel.NACChannel;
 import org.jpos.iso.packager.GenericPackager;
 import org.jpos.util.FieldUtil;
 
 /**
  * 
- * @author "Yoann Ciabaud" <yoann.ciabaud@monext.fr> "Erlangga"
- *         <erlangga258@gmail.com>
+ * @author "Yoann Ciabaud" <yoann.ciabaud@monext.fr>
+ * @author "Erlangga" <erlangga258@gmail.com>
+ *
  */
 public class JPOSSampler extends TCPSampler implements TestStateListener {
 
-	private static final Logger log = LoggingManager.getLoggerForClass();
+	private static final Logger LOGGER = LoggingManager.getLoggerForClass();
 	private final static String HEXES = "0123456789ABCDEF";
 	private boolean initialized = false;	
 	private Map<String, ISOMUX> isoMuxMap;
 	private static final Integer MAX_ISOBIT = Integer.valueOf(128);
 	// private static final Integer MAX_NESTED_ISOBIT = Integer.valueOf(64);
-	private ISOPackager customPackager;
-	private Properties reqProp;	
+	protected ISOPackager customPackager;
+	protected Properties reqProp;
 	private ISOMUX isoMUX;
 	private static final ExecutorService EX_SERVICE = Executors.newCachedThreadPool();
+	private BaseChannel baseChannel;
 
 	public JPOSSampler() {
-		log.info("call constructor() ...");
+		LOGGER.info("call constructor() ...");
 		// Default value for TCP Client
 		setClassname(LengthPrefixedBinaryTCPClientImpl.class.getName());
 	}
 
 	public void initialize() throws Exception {
-		log.info("call initilalize() ...");		
+		LOGGER.info("call initilalize() ...");
 		processPackagerFile();
 		processDataRequest();		
 		if (customPackager != null) {
-			log.info("customPackager is not null ...");
-			String server = getPropertyAsString(CustomTCPConfigGui.SERVER);
-			String port = getPropertyAsString(CustomTCPConfigGui.PORT);
-			String channel = getPropertyAsString(CustomTCPConfigGui.CHANNEL_KEY);		
-			final String threadName = JMeterContextService.getContext().getThread().getThreadName();
+			LOGGER.info("customPackager available ...");
+			String server = obtainServer();
+			int port = obtainPort();
+			String channel = obtainChannel();
+			final String threadName = getCurrentThreadName();
+			LOGGER.info("current thread is " + threadName + "[" + channel + ":" + server + ":" + port+ "]");
 
 			ChannelHelper channelHelper = new ChannelHelper();
 			String header = reqProp.getProperty("header");
@@ -73,12 +78,13 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 			} else {
 				channelHelper.setTpdu("0000000000"); // default
 			}
-			
-			if(isoMuxMap.containsKey(threadName)){
+
+			baseChannel = channelHelper.getChannel(server, port, customPackager, channel);
+			LOGGER.info("initialize channel " + baseChannel.getHost() + " port " + baseChannel.getPort());
+			/*if(isoMuxMap.containsKey(threadName)){
 				isoMUX = isoMuxMap.get(threadName);
 			}else{
-				BaseChannel baseChannel = channelHelper.getChannel(server,
-						Integer.parseInt(port), customPackager, channel);			
+				BaseChannel baseChannel = channelHelper.getChannel(server, port, customPackager, channel);
 				isoMUX = new ISOMUX(baseChannel){
 					@Override
 					protected String getKey(ISOMsg m) throws ISOException {
@@ -87,12 +93,33 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 				};
 				isoMuxMap.put(threadName, isoMUX);
 			}			
-			EX_SERVICE.execute(isoMUX);
+			EX_SERVICE.execute(isoMUX);*/
 			initialized = true;
 		}
 	}
 
+	protected String obtainServer() {
+//		return getPropertyAsString(CustomTCPConfigGui.SERVER);
+		return getServer();
+	}
+
+	protected int obtainPort() {
+		return getPort();
+//		String portStr = getPropertyAsString(CustomTCPConfigGui.PORT);
+//		if (portStr.isEmpty()) return 0;
+//		return Integer.parseInt(portStr);
+	}
+
+	protected String obtainChannel () {
+		return getPropertyAsString(CustomTCPConfigGui.CHANNEL_KEY);
+	}
+
+	public String getCurrentThreadName() {
+		return JMeterContextService.getContext().getThread().getThreadName();
+	}
+
 	private ISOMsg buildISOMsg() throws ISOException {
+		LOGGER.info("building iso message");
 		ISOMsg isoReq = new ISOMsg();
 		isoReq.setMTI((String) reqProp.get("mti"));
 
@@ -125,16 +152,15 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		}
 
 		// String stan_tid_req = isoReq.getString(11) + isoReq.getString(41);
-
+		LOGGER.info(LOGGERISOMsg(isoReq));
 		return isoReq;
 	}
 
 	@Override
 	public SampleResult sample(Entry e) {
-		log.info("call sample() ...");
+		LOGGER.info("call sample() ...");
 		SampleResult res = new SampleResult();
 		res.setSampleLabel(getName());
-		boolean isOK = false;
 		if (!initialized) {
 			try {
 				initialize();
@@ -148,22 +174,48 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		String timeout = getPropertyAsString(CustomTCPConfigGui.TIMEOUT);
 		int intTimeOut = 30 * 1000; // default
 		if (timeout != null && !timeout.equals("")) {
-			log.info("timeout = " + timeout);
+			LOGGER.info("timeout = " + timeout);
 			intTimeOut = Integer.parseInt(timeout);
 		}
 		res.sampleStart();
+		res.setSuccessful(false);
+		res.setResponseMessage("time-out");
+		res.setResponseCode("ER");
+
+
+		try {
+			ISOMsg isoReq = buildISOMsg();
+			ISOMsg isoRes = execute(intTimeOut, isoReq);
+			if (isoRes != null) {
+				res.setResponseMessage(LOGGERISOMsg(isoRes));
+				res.setResponseCodeOK();
+				res.setResponseData(LOGGERISOMsg(isoRes), StandardCharsets.UTF_8.name());
+				res.setSuccessful(true);
+			}
+		} catch (ISOException e1) {
+			LOGGER.error(e1.getMessage());
+			res.setResponseMessage(e1.getMessage());
+		} catch (IOException e1) {
+			LOGGER.error(e1.getMessage());
+			res.setResponseMessage(e1.getMessage());
+		}
+
+		res.sampleEnd();
+		return res;
+
+		/* =======================
 
 		SocketInterface socket = null;
 		try {
 			if(isoMUX.isConnected()){
 				socket = new SocketProxy(isoMUX);
 				ISOMsg isoReq = buildISOMsg();
-				log.info("Sending Time : " + FieldUtil.getDate());
+				LOGGER.info("Sending Time : " + FieldUtil.getDate());
 				ISOMsg isoResponse = socket.isoRequest(isoReq, intTimeOut);
-				log.info("Receive\t: " + FieldUtil.getDate());
+				LOGGER.info("Receive\t: " + FieldUtil.getDate());
 				if (isoResponse != null) {
-					log.info("iso response is not null");
-					String response = logISOMsg(isoResponse);
+					LOGGER.info("iso response is not null");
+					String response = LOGGERISOMsg(isoResponse);
 					if (response != null) {
 						res.setResponseMessage(response);
 					}
@@ -177,28 +229,35 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 				try {
 					initialize();
 				} catch (Exception e1) {
-					log.error(e1.getMessage());
+					LOGGER.error(e1.getMessage());
 					res.setResponseMessage(e1.getMessage());
 					res.setSuccessful(false);
 					return res;
 				}
 			}
 		} catch (ISOException e1) {
-			log.error(e1.getMessage());
+			LOGGER.error(e1.getMessage());
 			res.setResponseMessage(e1.getMessage());
 			res.setSuccessful(false);
 			return res;
 		}
-		res.sampleEnd();
-		res.setSuccessful(isOK);
-		return res;
+
+		 =================== */
 	}
 
-	private String logISOMsg(ISOMsg msg) {
+	protected ISOMsg execute(int intTimeOut, ISOMsg isoReq) throws IOException, ISOException {
+		LOGGER.info("connect to " + baseChannel.getHost() + " port " + baseChannel.getPort() + " time-out " + intTimeOut);
+		baseChannel.connect();
+		baseChannel.setTimeout(intTimeOut);
+		baseChannel.send(isoReq);
+		return baseChannel.receive();
+	}
+
+	private String LOGGERISOMsg(ISOMsg msg) {
 		StringBuffer sBuffer = new StringBuffer();
-		sBuffer.append("----RESPONSE ISO MESSAGE-----\n");
+		sBuffer.append("----DEBUG ISO MESSAGE-----\n");
 		try {
-			sBuffer.append("  MTI : " + msg.getMTI());
+			sBuffer.append("  MTI : " + msg.getMTI() + ", ");
 			for (int i = 1; i <= msg.getMaxField(); i++) {
 				if (msg.hasField(i)) {
 					sBuffer.append("Field-" + i + " : " + msg.getString(i)
@@ -247,7 +306,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 
 	@Override
 	public void testEnded() {
-		log.info("call testEnded()");
+		LOGGER.info("call testEnded()");
 		testEnded("");
 	}
 
@@ -261,76 +320,80 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		}
 	}
 
-	private void logJMeter() {
+	private void LOGGERJMeter() {
 		if (JMeterContextService.getContext() != null) {
 			if (JMeterContextService.getContext().getThreadGroup() != null) {
 				int numberOfThreads = JMeterContextService.getContext()
 						.getThreadGroup().getNumberOfThreads();
 				int numThreads = JMeterContextService.getContext()
 						.getThreadGroup().getNumThreads();
-				log.info("numThreads = " + numThreads + ", numberOfThreads = "
+				LOGGER.info("numThreads = " + numThreads + ", numberOfThreads = "
 						+ numberOfThreads);
 
 				int n = JMeterContextService.getTotalThreads();
-				log.info("n = " + n);
+				LOGGER.info("n = " + n);
 			}
 		}
 	}
 
 	@Override
 	public void testStarted() {
-		log.info("call testStarted()");
+		LOGGER.info("call testStarted()");
 		testStarted("");
 	}
 
-	private void processDataRequest() {
-		String reqFile = getPropertyAsString(CustomTCPConfigGui.REQ_KEY);
+	public void processDataRequest() {
+		String reqFile = obtainDataRequestFilePath();
 		if (reqFile != null) {
 			reqProp = new Properties();
 			InputStream input = null;
 			try {
 				File f = new File(reqFile);
-				log.info("reqFile = " + f.getAbsolutePath());
+				LOGGER.info("reqFile = " + f.getAbsolutePath());
 				if (f.exists()) {
-					log.info("file exists");
+					LOGGER.info("file exists");
 					input = new FileInputStream(new File(reqFile));
 					if (input != null) {
 						reqProp.load(input);
 					}
 				} else {
-					log.info("file not exists");
+					LOGGER.info("file not exists");
 				}
 			} catch (FileNotFoundException e) {
-				log.warn(e.getMessage());
+				LOGGER.warn(e.getMessage());
 				e.printStackTrace();
 			} catch (IOException e) {
-				log.warn(e.getMessage());
+				LOGGER.warn(e.getMessage());
 				e.printStackTrace();
 			}
 		}
 	}
 
-	private void processPackagerFile() {
+	protected String obtainDataRequestFilePath() {
+		return getPropertyAsString(CustomTCPConfigGui.REQ_KEY);
+	}
+
+	public void processPackagerFile() {
 		String packagerFile = getPropertyAsString(CustomTCPConfigGui.PACKAGER_KEY);
 		if (packagerFile != null) {
 			File initialFile = new File(packagerFile);
-			log.info("initFile = " + initialFile.getAbsolutePath());
+			LOGGER.info("initFile = " + initialFile.getAbsolutePath());
 			if (initialFile.exists()) {
-				log.info("file exists");
+				LOGGER.info("file exists");
 				try {
 					InputStream targetStream = new FileInputStream(initialFile);
 					if (targetStream != null) {
 						customPackager = new GenericPackager(targetStream);
 					}				
 				} catch (FileNotFoundException e) {
-					log.warn(e.getMessage());
+					LOGGER.warn(e.getMessage());
 					e.printStackTrace();
 				} catch (ISOException e) {
-					log.warn(e.getMessage());
+					LOGGER.warn(e.getMessage());
 					e.printStackTrace();
 				}
 			} else {
-				log.info("file not exists");
+				LOGGER.info("file not exists");
 			}
 		}
 	}

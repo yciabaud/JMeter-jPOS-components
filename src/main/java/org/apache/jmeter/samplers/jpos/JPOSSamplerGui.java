@@ -12,12 +12,13 @@ import org.apache.log.Logger;
 /**
  *
  * @author apc
- * "Erlangga" <erlangga258@gmail.com>
+ * @author "Erlangga" <erlangga258@gmail.com>
  */
 public class JPOSSamplerGui
         extends AbstractSamplerGui {
-	
-	private CustomTCPConfigGui tcpDefaultPanel;	
+
+    public static final String J_POS_SAMPLER_LABEL = "jPOS Sampler";
+    private CustomTCPConfigGui tcpDefaultPanel;
     private static final Logger log = LoggingManager.getLoggerForClass();
     
     public JPOSSamplerGui() {
@@ -26,18 +27,18 @@ public class JPOSSamplerGui
 
     @Override
     public String getStaticLabel() {
-        return "jPOS Sampler";
+        return J_POS_SAMPLER_LABEL;
     }
 
     @Override
     public void configure(TestElement element) {
-        log.info("running configure ,,,");        
+        log.info("running configure ...");
         tcpDefaultPanel.configure(element);
         super.configure(element);
     }
 
     public TestElement createTestElement() {
-    	log.info("running createTestElement ,,,");
+    	log.info("running createTestElement ...");
         JPOSSampler sampler = new JPOSSampler();
         modifyTestElement(sampler);
         return sampler;
