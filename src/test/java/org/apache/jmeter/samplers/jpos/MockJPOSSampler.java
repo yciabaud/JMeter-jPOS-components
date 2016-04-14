@@ -1,7 +1,11 @@
 package org.apache.jmeter.samplers.jpos;
 
 import org.jpos.iso.ISOException;
+import org.jpos.iso.ISOMsg;
 import org.jpos.iso.packager.GenericPackager;
+
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * Created by awibowo on 12/04/2016.
@@ -12,7 +16,10 @@ public class MockJPOSSampler extends JPOSSampler {
 
     @Override
     public void processDataRequest() {
-        super.processDataRequest();
+        reqProp = new Properties();
+        reqProp.setProperty("mti", "0800");
+        reqProp.setProperty("bit.41", "1234567");
+        reqProp.setProperty("bit.42", "12345678765432");
     }
 
     @Override
@@ -30,6 +37,8 @@ public class MockJPOSSampler extends JPOSSampler {
         }
     }
 
+
+
     @Override
     protected String obtainChannel() {
         return "nacchannel";
@@ -43,5 +52,13 @@ public class MockJPOSSampler extends JPOSSampler {
     @Override
     protected String obtainServer() {
         return this.getServer();
+    }
+
+    @Override
+    protected ISOMsg execute(int intTimeOut, ISOMsg isoReq) throws IOException, ISOException {
+        ISOMsg isoRes = (ISOMsg) isoReq.clone();
+        isoRes.setResponseMTI();
+        isoRes.set(39, "00");
+        return isoRes;
     }
 }

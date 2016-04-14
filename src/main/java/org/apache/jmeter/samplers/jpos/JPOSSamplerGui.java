@@ -16,8 +16,9 @@ import org.apache.log.Logger;
  */
 public class JPOSSamplerGui
         extends AbstractSamplerGui {
-	
-	private CustomTCPConfigGui tcpDefaultPanel;	
+
+    public static final String J_POS_SAMPLER_LABEL = "jPOS Sampler V013";
+    private CustomTCPConfigGui tcpDefaultPanel;
     private static final Logger log = LoggingManager.getLoggerForClass();
     
     public JPOSSamplerGui() {
@@ -26,7 +27,7 @@ public class JPOSSamplerGui
 
     @Override
     public String getStaticLabel() {
-        return "jPOS Sampler";
+        return J_POS_SAMPLER_LABEL;
     }
 
     @Override

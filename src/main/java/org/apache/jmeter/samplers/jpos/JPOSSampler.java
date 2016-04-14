@@ -28,6 +28,7 @@ import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMUX;
 import org.jpos.iso.ISOMsg;
 import org.jpos.iso.ISOPackager;
+import org.jpos.iso.channel.NACChannel;
 import org.jpos.iso.packager.GenericPackager;
 import org.jpos.util.FieldUtil;
 
@@ -46,9 +47,10 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	private static final Integer MAX_ISOBIT = Integer.valueOf(128);
 	// private static final Integer MAX_NESTED_ISOBIT = Integer.valueOf(64);
 	protected ISOPackager customPackager;
-	private Properties reqProp;	
+	protected Properties reqProp;
 	private ISOMUX isoMUX;
 	private static final ExecutorService EX_SERVICE = Executors.newCachedThreadPool();
+	private BaseChannel baseChannel;
 
 	public JPOSSampler() {
 		LOGGER.info("call constructor() ...");
@@ -61,12 +63,12 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		processPackagerFile();
 		processDataRequest();		
 		if (customPackager != null) {
-			LOGGER.info("customPackager is not null ...");
+			LOGGER.info("customPackager available ...");
 			String server = obtainServer();
 			int port = obtainPort();
 			String channel = obtainChannel();
 			final String threadName = getCurrentThreadName();
-			LOGGER.info("current thread is " + threadName);
+			LOGGER.info("current thread is " + threadName + "[" + channel + ":" + server + ":" + port+ "]");
 
 			ChannelHelper channelHelper = new ChannelHelper();
 			String header = reqProp.getProperty("header");
@@ -75,8 +77,10 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 			} else {
 				channelHelper.setTpdu("0000000000"); // default
 			}
-			
-			if(isoMuxMap.containsKey(threadName)){
+
+			baseChannel = channelHelper.getChannel(server, port, customPackager, channel);
+			LOGGER.info("initialize channel " + baseChannel.getHost() + " port " + baseChannel.getPort());
+			/*if(isoMuxMap.containsKey(threadName)){
 				isoMUX = isoMuxMap.get(threadName);
 			}else{
 				BaseChannel baseChannel = channelHelper.getChannel(server, port, customPackager, channel);
@@ -88,17 +92,21 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 				};
 				isoMuxMap.put(threadName, isoMUX);
 			}			
-			EX_SERVICE.execute(isoMUX);
+			EX_SERVICE.execute(isoMUX);*/
 			initialized = true;
 		}
 	}
 
 	protected String obtainServer() {
-		return getPropertyAsString(CustomTCPConfigGui.SERVER);
+//		return getPropertyAsString(CustomTCPConfigGui.SERVER);
+		return getServer();
 	}
 
 	protected int obtainPort() {
-		return Integer.parseInt(getPropertyAsString(CustomTCPConfigGui.PORT));
+		return getPort();
+//		String portStr = getPropertyAsString(CustomTCPConfigGui.PORT);
+//		if (portStr.isEmpty()) return 0;
+//		return Integer.parseInt(portStr);
 	}
 
 	protected String obtainChannel () {
@@ -110,6 +118,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	}
 
 	private ISOMsg buildISOMsg() throws ISOException {
+		LOGGER.info("building iso message");
 		ISOMsg isoReq = new ISOMsg();
 		isoReq.setMTI((String) reqProp.get("mti"));
 
@@ -142,7 +151,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		}
 
 		// String stan_tid_req = isoReq.getString(11) + isoReq.getString(41);
-
+		LOGGER.info(LOGGERISOMsg(isoReq));
 		return isoReq;
 	}
 
@@ -151,7 +160,6 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		LOGGER.info("call sample() ...");
 		SampleResult res = new SampleResult();
 		res.setSampleLabel(getName());
-		boolean isOK = false;
 		if (!initialized) {
 			try {
 				initialize();
@@ -169,6 +177,31 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 			intTimeOut = Integer.parseInt(timeout);
 		}
 		res.sampleStart();
+		res.setSuccessful(false);
+		res.setResponseMessage("time-out");
+		res.setResponseCode("ER");
+
+
+		try {
+			ISOMsg isoReq = buildISOMsg();
+			ISOMsg isoRes = execute(intTimeOut, isoReq);
+			if (isoRes != null) {
+				res.setResponseMessage(LOGGERISOMsg(isoRes));
+				res.setResponseCodeOK();
+				res.setSuccessful(true);
+			}
+		} catch (ISOException e1) {
+			LOGGER.error(e1.getMessage());
+			res.setResponseMessage(e1.getMessage());
+		} catch (IOException e1) {
+			LOGGER.error(e1.getMessage());
+			res.setResponseMessage(e1.getMessage());
+		}
+
+		res.sampleEnd();
+		return res;
+
+		/* =======================
 
 		SocketInterface socket = null;
 		try {
@@ -206,16 +239,23 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 			res.setSuccessful(false);
 			return res;
 		}
-		res.sampleEnd();
-		res.setSuccessful(isOK);
-		return res;
+
+		 =================== */
+	}
+
+	protected ISOMsg execute(int intTimeOut, ISOMsg isoReq) throws IOException, ISOException {
+		LOGGER.info("connect to " + baseChannel.getHost() + " port " + baseChannel.getPort() + " time-out " + intTimeOut);
+		baseChannel.connect();
+		baseChannel.setTimeout(intTimeOut);
+		baseChannel.send(isoReq);
+		return baseChannel.receive();
 	}
 
 	private String LOGGERISOMsg(ISOMsg msg) {
 		StringBuffer sBuffer = new StringBuffer();
-		sBuffer.append("----RESPONSE ISO MESSAGE-----\n");
+		sBuffer.append("----DEBUG ISO MESSAGE-----\n");
 		try {
-			sBuffer.append("  MTI : " + msg.getMTI());
+			sBuffer.append("  MTI : " + msg.getMTI() + ", ");
 			for (int i = 1; i <= msg.getMaxField(); i++) {
 				if (msg.hasField(i)) {
 					sBuffer.append("Field-" + i + " : " + msg.getString(i)
@@ -301,7 +341,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	}
 
 	public void processDataRequest() {
-		String reqFile = getPropertyAsString(CustomTCPConfigGui.REQ_KEY);
+		String reqFile = obtainDataRequestFilePath();
 		if (reqFile != null) {
 			reqProp = new Properties();
 			InputStream input = null;
@@ -325,6 +365,10 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	protected String obtainDataRequestFilePath() {
+		return getPropertyAsString(CustomTCPConfigGui.REQ_KEY);
 	}
 
 	public void processPackagerFile() {

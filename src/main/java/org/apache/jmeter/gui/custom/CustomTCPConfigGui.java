@@ -49,6 +49,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	
 	private String packagerFile;
 	private String fileRequestData;
+	private String channelSelected;
 	
 	private static final Logger log = LoggingManager.getLoggerForClass();
 
@@ -87,6 +88,11 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		server.setText(element.getPropertyAsString(TCPSampler.SERVER));
 		port.setText(element.getPropertyAsString(TCPSampler.PORT));
 		timeout.setText(element.getPropertyAsString(TCPSampler.TIMEOUT));
+
+		if (element.getPropertyAsString(CHANNEL_KEY)!=null) {
+			channelSelected = element.getPropertyAsString(CHANNEL_KEY);
+			comboChannel.setSelectedItem(channelSelected);
+		}
 		
 		if(element.getPropertyAsString(PACKAGER_KEY)!=null){
 			packagerFile = element.getPropertyAsString(PACKAGER_KEY);
@@ -116,7 +122,8 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		configureTestElement(element);
 		element.setProperty(TCPSampler.SERVER, server.getText());
 		element.setProperty(TCPSampler.PORT, port.getText());
-		element.setProperty(TCPSampler.TIMEOUT, timeout.getText());		
+		element.setProperty(TCPSampler.TIMEOUT, timeout.getText());
+		element.setProperty(CHANNEL_KEY, (String) comboChannel.getSelectedItem());
 		
 		if(packagerFile!=null){
 			element.setProperty(PACKAGER_KEY, packagerPath.getText());

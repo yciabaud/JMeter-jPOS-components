@@ -10,6 +10,7 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.utils.TestJMeterUtils;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
+import org.hamcrest.CoreMatchers;
 import org.jpos.iso.ISOException;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -82,6 +83,8 @@ public class JPOSSamplerTest {
         instance.testStarted();
 
         SampleResult res = instance.sample(null);
+        assertThat(res, CoreMatchers.<SampleResult>notNullValue());
+        assertThat(res.getResponseCode(), CoreMatchers.is("200"));
     }
 
 }
