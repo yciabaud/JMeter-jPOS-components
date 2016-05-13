@@ -8,80 +8,133 @@
 	<version>1.0.0-SNAPSHOT</version>
 	<name>JMeter JPOS components</name>
 
+	<properties>
+		<jmeter.version>2.13</jmeter.version>
+	</properties>
+
 	<dependencies>
 		<!-- JMeter dependencies -->
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
 			<artifactId>ApacheJMeter_core</artifactId>
-			<version>2.11</version>
+			<version>${jmeter.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-math3</artifactId>
+					<groupId>commons-math3</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-pool2</artifactId>
+					<groupId>commons-pool2</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
 			<artifactId>ApacheJMeter_components</artifactId>
-			<version>2.11</version>
+			<version>${jmeter.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-math3</artifactId>
+					<groupId>commons-math3</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-pool2</artifactId>
+					<groupId>commons-pool2</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
 			<artifactId>ApacheJMeter</artifactId>
-			<version>2.9</version>
+			<version>${jmeter.version}</version>
 			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-math3</artifactId>
+					<groupId>commons-math3</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-pool2</artifactId>
+					<groupId>commons-pool2</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
 			<artifactId>ApacheJMeter_functions</artifactId>
-			<version>2.11</version>
+			<version>${jmeter.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-math3</artifactId>
+					<groupId>commons-math3</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-pool2</artifactId>
+					<groupId>commons-pool2</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
 			<artifactId>ApacheJMeter_http</artifactId>
-			<version>2.11</version>
+			<version>${jmeter.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-math3</artifactId>
+					<groupId>commons-math3</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-pool2</artifactId>
+					<groupId>commons-pool2</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
 			<artifactId>ApacheJMeter_java</artifactId>
-			<version>2.9</version>
+			<version>${jmeter.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-math3</artifactId>
+					<groupId>commons-math3</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-pool2</artifactId>
+					<groupId>commons-pool2</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.apache.jmeter</groupId> -->
-<!-- 			<artifactId>ApacheJMeter_report</artifactId> -->
-<!-- 			<version>2.9</version> -->
-<!-- 		</dependency> -->
 
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
 			<artifactId>ApacheJMeter_tcp</artifactId>
-			<version>2.11</version>
+			<version>${jmeter.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-math3</artifactId>
+					<groupId>commons-math3</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-pool2</artifactId>
+					<groupId>commons-pool2</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.apache.jmeter</groupId> -->
-<!-- 			<artifactId>ApacheJMeter_ftp</artifactId> -->
-<!-- 			<version>2.9</version> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.apache.jmeter</groupId> -->
-<!-- 			<artifactId>ApacheJMeter_jdbc</artifactId> -->
-<!-- 			<version>2.9</version> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.apache.jmeter</groupId> -->
-<!-- 			<artifactId>ApacheJMeter_jms</artifactId> -->
-<!-- 			<version>2.9</version> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.apache.jmeter</groupId> -->
-<!-- 			<artifactId>ApacheJMeter_ldap</artifactId> -->
-<!-- 			<version>2.9</version> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.apache.jmeter</groupId> -->
-<!-- 			<artifactId>ApacheJMeter_mail</artifactId> -->
-<!-- 			<version>2.9</version> -->
-<!-- 		</dependency> -->
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
 			<artifactId>jorphan</artifactId>
-			<version>2.9</version>
+			<version>${jmeter.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-math3</artifactId>
+					<groupId>commons-math3</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-pool2</artifactId>
+					<groupId>commons-pool2</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>avalon-logkit</groupId>
@@ -92,8 +145,21 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.8.2</version>
+			<version>4.11</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math3</artifactId>
+			<version>3.4.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-pool2</artifactId>
+			<version>2.3</version>
+		</dependency>
+
 
 		<!-- To deploy on local repo -->
 		<dependency>
@@ -128,8 +194,8 @@
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>2.0.2</version>
 					<configuration>
-						<source>1.6</source>
-						<target>1.6</target>
+						<source>1.7</source>
+						<target>1.7</target>
 					</configuration>
 				</plugin>
 				<plugin>
