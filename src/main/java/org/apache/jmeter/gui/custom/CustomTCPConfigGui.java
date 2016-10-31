@@ -3,20 +3,6 @@
  */
 package org.apache.jmeter.gui.custom;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.gui.util.FileDialoger;
@@ -26,6 +12,12 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
 
 /**
  * @author erlangga email : erlangga258@gmail.com
@@ -43,7 +35,6 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	private JTextField port;
 	private JTextField timeout;
 	private JComboBox comboChannel;
-	private JTextArea sendISO;
 	private JLabel packagerPath;
 	private JLabel reqPath;
 	
@@ -193,22 +184,6 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		PortPanel.add(port, BorderLayout.CENTER);
 		return PortPanel;
 	}
-	
-	private JPanel getAuthorPanel(){
-		Box verticalBox = Box.createVerticalBox();
-		
-		JLabel authorLabel = new JLabel("Author:");
-		JLabel yoanLabel = new JLabel("Yoann Ciabaud < y.ciabaud@gmail.com >");
-		JLabel erlanggaLabel = new JLabel("Erlangga < erlangga258@gmail.com >");
-		
-		verticalBox.add(authorLabel);
-		verticalBox.add(yoanLabel);
-		verticalBox.add(erlanggaLabel);
-					
-		JPanel authorPanel = new JPanel(new BorderLayout(5, 0));
-		authorPanel.add(verticalBox, BorderLayout.CENTER);
-		return authorPanel;
-	}
 
 	public String getPort() {
 		return port.getText();
@@ -339,7 +314,6 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		mainPanel.add(getPortPanel());
 		mainPanel.add(getTimeoutPanel());
 		mainPanel.add(getRequestDataFromPropertiesFileDialoger());
-		mainPanel.add(getAuthorPanel());
 
 		add(mainPanel, BorderLayout.CENTER);
 	}
