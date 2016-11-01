@@ -23,22 +23,6 @@ public class SocketProxy implements SocketInterface {
 	public SocketProxy(ISOMUX isoMUX) throws ISOException {		
 		this.isoMux = isoMUX;
 	}
-	
-	private static void logISOMsg(ISOMsg msg) {		
-//		logger.info("----ISO MESSAGE-----");
-//		try {
-//			logger.info("  MTI : " + msg.getMTI());
-//			for (int i=1;i<=msg.getMaxField();i++) {
-//				if (msg.hasField(i)) {
-//					logger.info("Field-"+i+" : "+msg.getString(i)+", Length : "+msg.getString(i).length());
-//				}
-//			}
-//		} catch (ISOException e) {
-//			e.printStackTrace();
-//		} finally {
-//			logger.info("--------------------");
-//		}
-	}
 
 	public ISOMsg isoRequest(final ISOMsg isoMsg, final int timeout) {		
 		logger.info("masuk iso request ...");

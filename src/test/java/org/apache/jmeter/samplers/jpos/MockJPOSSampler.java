@@ -3,8 +3,10 @@ package org.apache.jmeter.samplers.jpos;
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMsg;
 import org.jpos.iso.packager.GenericPackager;
+import org.junit.Ignore;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Properties;
 
 /**
@@ -16,10 +18,10 @@ public class MockJPOSSampler extends JPOSSampler {
 
     @Override
     public void processDataRequest() {
-        reqProp = new Properties();
-        reqProp.setProperty("mti", "0800");
-        reqProp.setProperty("bit.41", "1234567");
-        reqProp.setProperty("bit.42", "12345678765432");
+        isoMap = new HashMap<String, String>();
+        isoMap.put("mti","0800");
+        isoMap.put("bit.41", "1234567");
+        isoMap.put("bit.42", "12345678765432");
     }
 
     @Override
@@ -37,21 +39,9 @@ public class MockJPOSSampler extends JPOSSampler {
         }
     }
 
-
-
     @Override
     protected String obtainChannel() {
         return "nacchannel";
-    }
-
-    @Override
-    protected int obtainPort() {
-        return this.getPort();
-    }
-
-    @Override
-    protected String obtainServer() {
-        return this.getServer();
     }
 
     @Override
