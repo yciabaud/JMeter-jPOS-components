@@ -167,6 +167,10 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 
 		try {
 			ISOMsg isoReq = buildISOMsg();
+			if(isoReq != null) {
+				res.setRequestHeaders(LOGGERISOMsg(isoReq));
+			}
+
 			ISOMsg isoRes = execute(intTimeOut, isoReq);
 			if (isoRes != null) {
 				res.setResponseMessage(LOGGERISOMsg(isoRes));
