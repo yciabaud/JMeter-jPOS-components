@@ -1,10 +1,6 @@
 package org.apache.jmeter.samplers.jpos;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
@@ -41,16 +37,15 @@ import org.jpos.util.FieldUtil;
  */
 public class JPOSSampler extends TCPSampler implements TestStateListener {
 
+	// https://svn.apache.org/repos/asf/jmeter/tags/v2_8/src/protocol/tcp/org/apache/jmeter/protocol/tcp/sampler/TCPSampler.java
+
 	private static final Logger LOGGER = LoggingManager.getLoggerForClass();
 	private final static String HEXES = "0123456789ABCDEF";
-	private boolean initialized = false;	
-	private Map<String, ISOMUX> isoMuxMap;
+	private boolean initialized = false;
 	private static final Integer MAX_ISOBIT = Integer.valueOf(128);
 	// private static final Integer MAX_NESTED_ISOBIT = Integer.valueOf(64);
 	protected ISOPackager customPackager;
 	protected Properties reqProp;
-	private ISOMUX isoMUX;
-	private static final ExecutorService EX_SERVICE = Executors.newCachedThreadPool();
 	private BaseChannel baseChannel;
 
 	public JPOSSampler() {
@@ -62,7 +57,7 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 	public void initialize() throws Exception {
 		LOGGER.info("call initilalize() ...");
 		processPackagerFile();
-		processDataRequest();		
+		processDataRequest();
 		if (customPackager != null) {
 			LOGGER.info("customPackager available ...");
 			String server = obtainServer();
@@ -81,19 +76,6 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 
 			baseChannel = channelHelper.getChannel(server, port, customPackager, channel);
 			LOGGER.info("initialize channel " + baseChannel.getHost() + " port " + baseChannel.getPort());
-			/*if(isoMuxMap.containsKey(threadName)){
-				isoMUX = isoMuxMap.get(threadName);
-			}else{
-				BaseChannel baseChannel = channelHelper.getChannel(server, port, customPackager, channel);
-				isoMUX = new ISOMUX(baseChannel){
-					@Override
-					protected String getKey(ISOMsg m) throws ISOException {
-						return super.getKey(m);
-					}
-				};
-				isoMuxMap.put(threadName, isoMUX);
-			}			
-			EX_SERVICE.execute(isoMUX);*/
 			initialized = true;
 		}
 	}
@@ -312,12 +294,6 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 
 	@Override
 	public void testEnded(String arg0) {
-		for(ISOMUX isoMux : isoMuxMap.values()){
-			if(isoMux!=null){
-				isoMux.terminate();
-				isoMux = null;
-			}
-		}
 	}
 
 	private void LOGGERJMeter() {
@@ -342,31 +318,26 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 		testStarted("");
 	}
 
+	@Override
+	public void testStarted(String s) {
+
+	}
+
 	public void processDataRequest() {
 		String reqFile = obtainDataRequestFilePath();
 		if (reqFile != null) {
-			reqProp = new Properties();
-			InputStream input = null;
 			try {
-				File f = new File(reqFile);
-				LOGGER.info("reqFile = " + f.getAbsolutePath());
-				if (f.exists()) {
-					LOGGER.info("file exists");
-					input = new FileInputStream(new File(reqFile));
-					if (input != null) {
-						reqProp.load(input);
-					}
-				} else {
-					LOGGER.info("file not exists");
-				}
-			} catch (FileNotFoundException e) {
-				LOGGER.warn(e.getMessage());
-				e.printStackTrace();
+				reqProp = parsePropertiesString(reqFile);
 			} catch (IOException e) {
-				LOGGER.warn(e.getMessage());
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private Properties parsePropertiesString(String s) throws IOException {
+		Properties p = new Properties();
+		p.load(new StringReader(s));
+		return p;
 	}
 
 	protected String obtainDataRequestFilePath() {
@@ -396,10 +367,5 @@ public class JPOSSampler extends TCPSampler implements TestStateListener {
 				LOGGER.info("file not exists");
 			}
 		}
-	}
-
-	@Override
-	public void testStarted(String arg0) {
-		isoMuxMap = new ConcurrentHashMap<String, ISOMUX>();
 	}
 }

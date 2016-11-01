@@ -27,16 +27,17 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	public final static String SERVER = "server"; //$NON-NLS-1$
 	public final static String PORT = "port"; //$NON-NLS-1$    
 	public final static String TIMEOUT = "timeout"; //$NON-NLS-1$
-	public final static String CHANNEL_KEY = "channel";
-	public final static String PACKAGER_KEY = "packager";
-	public final static String REQ_KEY = "request2";
+	public final static String CHANNEL_KEY = "channel"; //$NON-NLS-1$
+	public final static String PACKAGER_KEY = "packager"; //$NON-NLS-1$
+	public final static String REQ_KEY = "request2"; //$NON-NLS-1$
 
 	private JTextField server;
 	private JTextField port;
 	private JTextField timeout;
 	private JComboBox comboChannel;
 	private JLabel packagerPath;
-	private JLabel reqPath;
+	//private JLabel reqPath;
+	private JTextArea requestData;
 	
 	private String packagerFile;
 	private String fileRequestData;
@@ -60,7 +61,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		port.setText("");
 		timeout.setText("");
 		packagerPath.setText("");
-		reqPath.setText("");
+		requestData.setText("");
 		packagerFile = "";
 		fileRequestData = "";
 		comboChannel.setSelectedIndex(0);
@@ -76,6 +77,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	}
 
 	public void configure(TestElement element) {
+		super.configure(element);
 		server.setText(element.getPropertyAsString(TCPSampler.SERVER));
 		port.setText(element.getPropertyAsString(TCPSampler.PORT));
 		timeout.setText(element.getPropertyAsString(TCPSampler.TIMEOUT));
@@ -89,12 +91,8 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 			packagerFile = element.getPropertyAsString(PACKAGER_KEY);
 			packagerPath.setText(packagerFile);
 		}
-		
-		if(element.getPropertyAsString(REQ_KEY)!=null){
-			fileRequestData = element.getPropertyAsString(REQ_KEY);
-			reqPath.setText(fileRequestData);
-		}		
-		super.configure(element);
+
+		requestData.setText(element.getPropertyAsString(REQ_KEY));
 	}
 
 	public TestElement createTestElement() {
@@ -109,19 +107,13 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	 * @see org.apache.jmeter.gui.JMeterGUIComponent#modifyTestElement(TestElement)
 	 */
 	public void modifyTestElement(TestElement element) {
-		element.clear();
 		configureTestElement(element);
 		element.setProperty(TCPSampler.SERVER, server.getText());
 		element.setProperty(TCPSampler.PORT, port.getText());
 		element.setProperty(TCPSampler.TIMEOUT, timeout.getText());
 		element.setProperty(CHANNEL_KEY, (String) comboChannel.getSelectedItem());
-		
-		if(packagerFile!=null){
-			element.setProperty(PACKAGER_KEY, packagerPath.getText());
-		}		
-		if(fileRequestData!=null){
-			element.setProperty(REQ_KEY, reqPath.getText());
-		}
+		element.setProperty(PACKAGER_KEY, packagerPath.getText());
+		element.setProperty(REQ_KEY, requestData.getText());
 	}
 
 	private JPanel getTimeoutPanel() {
@@ -188,7 +180,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	public String getPort() {
 		return port.getText();
 	}
-	
+
 	/*
 	 * https://jmeter.apache.org/api/org/apache/jmeter/gui/util/FileDialoger.html
 	 */
@@ -219,67 +211,18 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		channelPanel.add(btnChoosen, BorderLayout.EAST);
 		return channelPanel;
 	}
-	
-	private JPanel getRequestDataFromPropertiesFileDialoger() {
-		JLabel reqlabel = new JLabel("Data:");		
-		reqPath = new JLabel("");
-		final JButton btnChoosen = new JButton("...");
-		ActionListener al;
-		al = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ae) {
-				if(ae.getSource()==btnChoosen){
-					JFileChooser chooser = FileDialoger.promptToOpenFile(new String[]{"properties"});
-					if(chooser!=null){
-						reqPath.setText(chooser.getSelectedFile().getAbsolutePath());
-						fileRequestData = chooser.getSelectedFile().getAbsolutePath();
-						log.info("req file selected = " + fileRequestData);
-					}else{
-						return;
-					}
-				}
-			}
-		};
-		btnChoosen.addActionListener(al);
 
-		JPanel reqPanel = new JPanel(new BorderLayout(5, 0));
-		reqPanel.add(reqlabel, BorderLayout.WEST);
-		reqPanel.add(reqPath, BorderLayout.CENTER);
-		reqPanel.add(btnChoosen, BorderLayout.EAST);
-		return reqPanel;
+	private JPanel createRequestPanel() {
+		JLabel reqLabel = new JLabel("Data");
+		requestData = new JTextArea(3, 0);
+		requestData.setLineWrap(true);
+		requestData.setName(REQ_KEY);
+		reqLabel.setLabelFor(requestData);
+		JPanel reqDataPanel = new JPanel(new BorderLayout(5, 0));
+		reqDataPanel.add(reqLabel, BorderLayout.WEST);
+		reqDataPanel.add(requestData, BorderLayout.CENTER);
+		return reqDataPanel;
 	}
-
-	
-	private JPanel getSendISOPanel() {
-		JLabel reqlabel = new JLabel("Field:");
-
-		final JFileChooser fileChooser = new JFileChooser();
-		fileChooser.setCurrentDirectory(new File(System
-				.getProperty("user.home")));		
-		final JLabel reqPath = new JLabel("");
-		JButton btnChoosen = new JButton("...");
-		ActionListener al;
-		al = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ae) {
-				switch (fileChooser.showOpenDialog(CustomTCPConfigGui.this)) {
-				case JFileChooser.APPROVE_OPTION:
-					reqPath.setText(fileChooser.getSelectedFile().getAbsolutePath());
-					fileRequestData = fileChooser.getSelectedFile().getAbsolutePath();
-					log.info("req file selected = " + fileRequestData);
-					break;
-				}
-			}
-		};
-		btnChoosen.addActionListener(al);
-
-		JPanel reqPanel = new JPanel(new BorderLayout(5, 0));
-		reqPanel.add(reqlabel, BorderLayout.WEST);
-		reqPanel.add(reqPath, BorderLayout.CENTER);
-		reqPanel.add(btnChoosen, BorderLayout.EAST);
-		return reqPanel;
-	}
-
 
 	private JPanel getChannelPanel() {
 		JLabel channellabel = new JLabel("Channel");
@@ -313,7 +256,7 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		mainPanel.add(getServerPanel());
 		mainPanel.add(getPortPanel());
 		mainPanel.add(getTimeoutPanel());
-		mainPanel.add(getRequestDataFromPropertiesFileDialoger());
+		mainPanel.add(createRequestPanel());
 
 		add(mainPanel, BorderLayout.CENTER);
 	}
