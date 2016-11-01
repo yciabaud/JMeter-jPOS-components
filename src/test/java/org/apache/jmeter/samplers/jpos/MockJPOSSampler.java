@@ -3,11 +3,9 @@ package org.apache.jmeter.samplers.jpos;
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMsg;
 import org.jpos.iso.packager.GenericPackager;
-import org.junit.Ignore;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Properties;
 
 /**
  * Created by awibowo on 12/04/2016.

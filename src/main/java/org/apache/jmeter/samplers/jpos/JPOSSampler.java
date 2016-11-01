@@ -1,5 +1,6 @@
 package org.apache.jmeter.samplers.jpos;
 
+import org.apache.jmeter.gui.custom.CustomTCPConfigGui;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -19,10 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 /**
- * 
  * @author "Yoann Ciabaud" <yoann.ciabaud@monext.fr>
  * @author "Erlangga" <erlangga258@gmail.com>
- *
  */
 public class JPOSSampler extends AbstractSampler {
 
@@ -96,53 +95,52 @@ public class JPOSSampler extends AbstractSampler {
 		return JMeterContextService.getContext().getThread().getThreadName();
 	}
 
-	private ISOMsg buildISOMsg() throws ISOException {
-		LOGGER.info("building iso message");
-		ISOMsg isoReq = new ISOMsg();
-		isoReq.setMTI(isoMap.get("mti"));
+    private ISOMsg buildISOMsg() throws ISOException {
+        LOGGER.info("building iso message");
+        ISOMsg isoReq = new ISOMsg();
+        isoReq.setMTI(isoMap.get("mti"));
 
-		int i = 1;
-		String field = null;
-		while (i < MAX_ISOBIT.intValue()) {
-			if ((field = isoMap.get("bit." + i)) != null) {
-				if (field.equalsIgnoreCase("auto")) {
-					isoReq.set(i, FieldUtil.getValue(i));
-					// else if (field.equalsIgnoreCase("stan"))
-					// this.isoReq.set(i,
-					// ISOUtil.zeropad(this.isoReq.getString(11), 8));
-					// else if (field.equalsIgnoreCase("tlv"))
-					// this.isoReq.set(i, tlvs.pack());
-					// else if (field.equalsIgnoreCase("counter"))
-					// this.isoReq.set(i, FieldUtil.getCounterValue());
-					// else if (field.startsWith("+"))
-					// this.isoReq.set(i, ISOUtil.hex2byte(field.substring(1)));
-					// else if (field.equalsIgnoreCase("nested")) {
-					// for (int n = 1; n < MAX_NESTED_ISOBIT.intValue(); n++) {
-					// if ((field = (String) reqProp.get("bit." + i + "." + n))
-					// != null)
-					// isoReq.set(i + "." + n, field);
-					// }
-				} else {
-					isoReq.set(i, field);
-				}
-			}
-			i++;
-		}
+        int i = 1;
+        String field = null;
+        while (i < MAX_ISOBIT.intValue()) {
+            if ((field = isoMap.get("bit." + i)) != null) {
+                if (field.equalsIgnoreCase("auto")) {
+                    isoReq.set(i, FieldUtil.getValue(i));
+                    // else if (field.equalsIgnoreCase("stan"))
+                    // this.isoReq.set(i,
+                    // ISOUtil.zeropad(this.isoReq.getString(11), 8));
+                    // else if (field.equalsIgnoreCase("tlv"))
+                    // this.isoReq.set(i, tlvs.pack());
+                    // else if (field.equalsIgnoreCase("counter"))
+                    // this.isoReq.set(i, FieldUtil.getCounterValue());
+                    // else if (field.startsWith("+"))
+                    // this.isoReq.set(i, ISOUtil.hex2byte(field.substring(1)));
+                    // else if (field.equalsIgnoreCase("nested")) {
+                    // for (int n = 1; n < MAX_NESTED_ISOBIT.intValue(); n++) {
+                    // if ((field = (String) reqProp.get("bit." + i + "." + n))
+                    // != null)
+                    // isoReq.set(i + "." + n, field);
+                    // }
+                } else {
+                    isoReq.set(i, field);
+                }
+            }
+            i++;
+        }
 
-		// String stan_tid_req = isoReq.getString(11) + isoReq.getString(41);
-		LOGGER.info(LOGGERISOMsg(isoReq));
-		return isoReq;
-	}
+        // String stan_tid_req = isoReq.getString(11) + isoReq.getString(41);
+        LOGGER.info(LOGGERISOMsg(isoReq));
+        return isoReq;
+    }
 
-	@Override
-	public SampleResult sample(Entry e) {
-		LOGGER.info("call sample() ...");
-
-		SampleResult res = new SampleResult();
-		res.setSampleLabel(getName());
+    @Override
+    public SampleResult sample(Entry e) {
+        LOGGER.info("call sample() ...");
+        SampleResult res = new SampleResult();
+        res.setSampleLabel(getName());
 
 		if (!initialized) {
-			try {
+            try {
 				initialize();
 			} catch (Exception e1) {
 				res.setResponseMessage(e1.getMessage());
@@ -166,6 +164,9 @@ public class JPOSSampler extends AbstractSampler {
 
 			try {
 				ISOMsg isoReq = buildISOMsg();
+				if(isoReq != null) {
+					res.setRequestHeaders(LOGGERISOMsg(isoReq));
+				}
 				ISOMsg isoRes = execute(intTimeOut, isoReq);
 				if (isoRes != null) {
 					res.setResponseMessage(LOGGERISOMsg(isoRes));
@@ -186,8 +187,6 @@ public class JPOSSampler extends AbstractSampler {
 		}
 		return res;
 	}
-
-
 
 	protected ISOMsg execute(int intTimeOut, ISOMsg isoReq) throws IOException, ISOException {
 		LOGGER.info("connect to " + baseChannel.getHost() + " port " + baseChannel.getPort() + " time-out " + intTimeOut);
