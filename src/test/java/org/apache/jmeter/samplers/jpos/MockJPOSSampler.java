@@ -5,7 +5,7 @@ import org.jpos.iso.ISOMsg;
 import org.jpos.iso.packager.GenericPackager;
 
 import java.io.IOException;
-import java.util.Properties;
+import java.util.HashMap;
 
 /**
  * Created by awibowo on 12/04/2016.
@@ -16,10 +16,10 @@ public class MockJPOSSampler extends JPOSSampler {
 
     @Override
     public void processDataRequest() {
-        reqProp = new Properties();
-        reqProp.setProperty("mti", "0800");
-        reqProp.setProperty("bit.41", "1234567");
-        reqProp.setProperty("bit.42", "12345678765432");
+        isoMap = new HashMap<String, String>();
+        isoMap.put("mti","0800");
+        isoMap.put("bit.41", "1234567");
+        isoMap.put("bit.42", "12345678765432");
     }
 
     @Override
@@ -36,8 +36,6 @@ public class MockJPOSSampler extends JPOSSampler {
             e.printStackTrace();
         }
     }
-
-
 
     @Override
     protected String obtainChannel() {
