@@ -30,14 +30,19 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 	public final static String CHANNEL_KEY = "channel"; //$NON-NLS-1$
 	public final static String PACKAGER_KEY = "packager"; //$NON-NLS-1$
 	public final static String REQ_KEY = "request2"; //$NON-NLS-1$
+	public final static String RETURN_TYPE_KEY = "returnType"; //$NON-NLS-1$
+
+	private static final String TEXT = "rb_text";
+	private static final String JSON = "rb_json";
 
 	private JTextField server;
 	private JTextField port;
 	private JTextField timeout;
 	private JComboBox comboChannel;
 	private JLabel packagerPath;
-	//private JLabel reqPath;
 	private JTextArea requestData;
+	private JRadioButton rbText;
+	private JRadioButton rbJSON;
 	
 	private String packagerFile;
 	private String fileRequestData;
@@ -65,6 +70,9 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		packagerFile = "";
 		fileRequestData = "";
 		comboChannel.setSelectedIndex(0);
+
+		rbText.setSelected(false);
+		rbJSON.setSelected(false);
 	}
 
 	public CustomTCPConfigGui(boolean displayName) {
@@ -92,6 +100,14 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 			packagerPath.setText(packagerFile);
 		}
 
+		if(element.getPropertyAsString(RETURN_TYPE_KEY).equalsIgnoreCase(TEXT)){
+			rbText.setSelected(true);
+			rbJSON.setSelected(false);
+		}else {
+			rbJSON.setSelected(true);
+			rbText.setSelected(false);
+		}
+
 		requestData.setText(element.getPropertyAsString(REQ_KEY));
 	}
 
@@ -114,6 +130,12 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		element.setProperty(CHANNEL_KEY, (String) comboChannel.getSelectedItem());
 		element.setProperty(PACKAGER_KEY, packagerPath.getText());
 		element.setProperty(REQ_KEY, requestData.getText());
+
+		if(rbText.isSelected()){
+			element.setProperty(RETURN_TYPE_KEY, TEXT);
+		}else if(rbJSON.isSelected()){
+			element.setProperty(RETURN_TYPE_KEY, JSON);
+		}
 	}
 
 	private JPanel getTimeoutPanel() {
@@ -127,6 +149,23 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		timeoutPanel.add(label, BorderLayout.WEST);
 		timeoutPanel.add(timeout, BorderLayout.CENTER);
 		return timeoutPanel;
+	}
+
+	private JPanel createResponseType(){
+		JLabel label = new JLabel("Return Type");
+
+		rbText = new JRadioButton("Text");
+		rbJSON = new JRadioButton("JSON");
+
+		ButtonGroup bg=new ButtonGroup();
+		bg.add(rbText);
+		bg.add(rbJSON);
+
+		JPanel panel = new JPanel(new BorderLayout(5, 0));
+		panel.add(label,BorderLayout.WEST);
+		panel.add(rbText,BorderLayout.CENTER);
+		panel.add(rbJSON,BorderLayout.EAST);
+		return panel;
 	}
 
 	public String getTimeout() {
@@ -256,6 +295,8 @@ public class CustomTCPConfigGui extends AbstractConfigGui {
 		mainPanel.add(getServerPanel());
 		mainPanel.add(getPortPanel());
 		mainPanel.add(getTimeoutPanel());
+		//mainPanel.add(createResponseType());
+		mainPanel.add(createRequestPanel());
 		mainPanel.add(createRequestPanel());
 
 		add(mainPanel, BorderLayout.CENTER);

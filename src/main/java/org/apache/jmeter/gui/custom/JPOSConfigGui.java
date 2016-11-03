@@ -29,6 +29,7 @@ public class JPOSConfigGui extends AbstractConfigGui {
 	private final static String CHANNEL_KEY = "channel";
 	private final static String PACKAGER_KEY = "packager";
 	private final static String REQUEST = "request";
+	//private final static String RETURN_TYPE_KEY = "returnType"; //$NON-NLS-1$
 
 	private JTextField server;
 	private JTextField port;
@@ -36,6 +37,11 @@ public class JPOSConfigGui extends AbstractConfigGui {
 	private JComboBox comboChannel;
 	private JLabel packagerPath;
 	private JTextArea requestData;
+	private JRadioButton rbText;
+	private JRadioButton rbJSON;
+
+	public static final String TEXT = "rb_text";
+	public static final String JSON = "rb_json";
 	
 	private String packagerFile;
 	private String channelSelected;
@@ -49,19 +55,6 @@ public class JPOSConfigGui extends AbstractConfigGui {
 	public JPOSConfigGui() {
 		this(true);
 	}
-	
-/*	@Override
-	public void clearGui() {
-		super.clearGui();
-		
-		server.setText("");
-		port.setText("");
-		timeout.setText("");
-		packagerPath.setText("");
-		packagerFile = "";
-		fileRequestData = "";
-		comboChannel.setSelectedIndex(0);
-	}*/
 
 	public JPOSConfigGui(boolean displayName) {
 		this.displayName = displayName;
@@ -84,6 +77,14 @@ public class JPOSConfigGui extends AbstractConfigGui {
 
 		packagerFile = element.getPropertyAsString(JPOSSampler.PACKAGER);
 		packagerPath.setText(packagerFile);
+
+		if(element.getPropertyAsString(JPOSSampler.RETURN_TYPE_KEY).equalsIgnoreCase(TEXT)){
+			rbText.setSelected(true);
+			rbJSON.setSelected(false);
+		}else {
+			rbJSON.setSelected(true);
+			rbText.setSelected(false);
+		}
 
 		requestData.setText(element.getPropertyAsString(JPOSSampler.REQUEST));
 		super.configure(element);
@@ -109,6 +110,11 @@ public class JPOSConfigGui extends AbstractConfigGui {
 		element.setProperty(JPOSSampler.CHANNEL, (String) comboChannel.getSelectedItem());
 		element.setProperty(JPOSSampler.PACKAGER, packagerPath.getText());
 		element.setProperty(JPOSSampler.REQUEST,requestData.getText());
+		if(rbText.isSelected()){
+			element.setProperty(JPOSSampler.RETURN_TYPE_KEY, TEXT);
+		}else if(rbJSON.isSelected()){
+			element.setProperty(JPOSSampler.RETURN_TYPE_KEY, JSON);
+		}
 	}
 
 	private JPanel createTimeoutPanel() {
@@ -122,6 +128,23 @@ public class JPOSConfigGui extends AbstractConfigGui {
 		timeoutPanel.add(label, BorderLayout.WEST);
 		timeoutPanel.add(timeout, BorderLayout.CENTER);
 		return timeoutPanel;
+	}
+
+	private JPanel createResponseType(){
+		JLabel label = new JLabel("Return Type");
+
+		rbText = new JRadioButton("Text");
+		rbJSON = new JRadioButton("JSON");
+
+		ButtonGroup bg=new ButtonGroup();
+		bg.add(rbText);
+		bg.add(rbJSON);
+
+		JPanel panel = new JPanel(new GridLayout(1,3));
+		panel.add(label);
+		panel.add(rbText);
+		panel.add(rbJSON);
+		return panel;
 	}
 
 	public String getTimeout() {
@@ -223,6 +246,7 @@ public class JPOSConfigGui extends AbstractConfigGui {
 		mainPanel.add(createServerPanel());
 		mainPanel.add(createPortPanel());
 		mainPanel.add(createTimeoutPanel());
+		mainPanel.add(createResponseType());
 		mainPanel.add(createRequestPanel());
 
 		add(mainPanel, BorderLayout.CENTER);

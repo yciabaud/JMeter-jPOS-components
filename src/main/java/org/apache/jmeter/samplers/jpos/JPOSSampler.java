@@ -1,6 +1,8 @@
 package org.apache.jmeter.samplers.jpos;
 
-import org.apache.jmeter.gui.custom.CustomTCPConfigGui;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import org.apache.jmeter.gui.custom.JPOSConfigGui;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -40,6 +42,7 @@ public class JPOSSampler extends AbstractSampler {
 	public final static String CHANNEL = "JPOSSampler.channel";
 	public final static String PACKAGER = "JPOSSampler.packager";
 	public final static String REQUEST = "JPOSSampler.request";
+	public final static String RETURN_TYPE_KEY = "JPOSSampler.returnType";
 
 	public JPOSSampler() {
 		LOGGER.info("call constructor() ...");
@@ -161,7 +164,6 @@ public class JPOSSampler extends AbstractSampler {
 			res.setSuccessful(false);
 			res.setResponseMessage("time-out");
 			res.setResponseCode("ER");
-
 			try {
 				ISOMsg isoReq = buildISOMsg();
 				if(isoReq != null) {
@@ -169,9 +171,15 @@ public class JPOSSampler extends AbstractSampler {
 				}
 				ISOMsg isoRes = execute(intTimeOut, isoReq);
 				if (isoRes != null) {
-					res.setResponseMessage(LOGGERISOMsg(isoRes));
+					String logISOMsg = null;
+					if(getPropertyAsString(RETURN_TYPE_KEY).equalsIgnoreCase(JPOSConfigGui.JSON)){
+						logISOMsg = LOGGERISOMsgToJSON(isoRes);
+					}else {
+						logISOMsg = LOGGERISOMsg(isoRes);
+					}
+					res.setResponseMessage(logISOMsg);
 					res.setResponseCodeOK();
-					res.setResponseData(LOGGERISOMsg(isoRes), StandardCharsets.UTF_8.name());
+					res.setResponseData(logISOMsg, StandardCharsets.UTF_8.name());
 					res.setSuccessful(true);
 				}
 			} catch (ISOException e1) {
@@ -181,7 +189,6 @@ public class JPOSSampler extends AbstractSampler {
 				LOGGER.error(e1.getMessage());
 				res.setResponseMessage(e1.getMessage());
 			}
-
 		}finally {
 			res.sampleEnd();
 		}
@@ -198,7 +205,6 @@ public class JPOSSampler extends AbstractSampler {
 
 	private String LOGGERISOMsg(ISOMsg msg) {
 		StringBuffer sBuffer = new StringBuffer();
-		sBuffer.append("----DEBUG ISO MESSAGE-----\n");
 		try {
 			sBuffer.append("  MTI : " + msg.getMTI() + ", ");
 			for (int i = 1; i <= msg.getMaxField(); i++) {
@@ -210,10 +216,26 @@ public class JPOSSampler extends AbstractSampler {
 		} catch (ISOException e) {
 			e.printStackTrace();
 			sBuffer.append(e.getMessage());
-		} finally {
-			sBuffer.append("--------------------\n");
 		}
 		return sBuffer.toString();
+	}
+
+	private String LOGGERISOMsgToJSON(ISOMsg msg){
+		JsonObject restData = new JsonObject();
+		try {
+			restData.addProperty("MTI",msg.getMTI());
+		} catch (ISOException e) {
+			e.printStackTrace();
+		}
+		for (int i = 1; i <= msg.getMaxField(); i++) {
+			if (msg.hasField(i)) {
+				JsonObject fieldData = new JsonObject();
+				fieldData.addProperty("Value",msg.getString(i));
+				fieldData.addProperty("Length",msg.getString(i).length());
+				restData.add("Field-"+i,fieldData);
+			}
+		}
+		return new Gson().toJson(restData);
 	}
 
 	public static byte[] hexStringToByteArray(String s) {
