@@ -208,13 +208,14 @@ public class JPOSConfigGui extends AbstractConfigGui {
 
 	private JPanel createRequestPanel() {
 		JLabel reqLabel = new JLabel("Data");
-		requestData = new JTextArea(3, 0);
+		requestData = new JTextArea(10, 0);
 		requestData.setLineWrap(true);
 		requestData.setName(REQUEST);
 		reqLabel.setLabelFor(requestData);
+
 		JPanel reqDataPanel = new JPanel(new BorderLayout(5, 0));
 		reqDataPanel.add(reqLabel, BorderLayout.WEST);
-		reqDataPanel.add(requestData, BorderLayout.CENTER);
+		reqDataPanel.add(new JScrollPane(requestData), BorderLayout.CENTER);
 		return reqDataPanel;
 	}
 
