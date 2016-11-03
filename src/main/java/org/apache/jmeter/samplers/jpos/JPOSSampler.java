@@ -266,12 +266,12 @@ public class JPOSSampler extends AbstractSampler {
 
 	private void mappingISOProp(String data) {
 		HashMap<String, String> map = new HashMap<String, String>();
-		BufferedReader bufReader = new BufferedReader(new StringReader(data));
+		BufferedReader bufReader = new BufferedReader(new StringReader(data.trim()));
 		String line = null;
 		try {
 			while ((line = bufReader.readLine()) != null) {
 				String parts[] = line.split("=");
-				map.put(parts[0], parts[1]);
+				map.put(parts[0].trim(), parts[1].trim());
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
