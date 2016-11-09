@@ -1,7 +1,7 @@
 @echo off
 
 set JAR_LIB=jmeter-jpos-components-1.0.0-SNAPSHOT.jar
-rem mvn dependency:copy-dependencies install -DexcludeGroupIds=org.apache.jmeter
+mvn dependency:copy-dependencies install -DexcludeGroupIds=org.apache.jmeter
 
 if [%1]==[] goto usage
 xcopy /s /y %1\lib %1\lib-ori
