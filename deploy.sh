@@ -2,7 +2,7 @@
 
 # mvn dependency:copy-dependencies install -DexcludeGroupIds=org.apache.jmeter
 
-JAR_LIB = jmeter-jpos-components-1.0.0-SNAPSHOT.jar
+JAR_LIB=jmeter-jpos-components-1.0.0-SNAPSHOT.jar
 
 if [ $# -eq 0 ]; then
 	echo "please input jmeter root folder"

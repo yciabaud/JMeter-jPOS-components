@@ -26,7 +26,7 @@ public class FieldUtil {
 	public static String getBit11() {
 		Date d = new Date();
 		String result = formatDate(d, "ssSS");
-		return result;
+		return "0"+result;
 	}
 
 	public static String getBit12() {
