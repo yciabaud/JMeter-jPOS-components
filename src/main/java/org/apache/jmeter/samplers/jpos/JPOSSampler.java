@@ -10,16 +10,15 @@ import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.util.ChannelHelper;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
-import org.jpos.iso.BaseChannel;
-import org.jpos.iso.ISOException;
-import org.jpos.iso.ISOMsg;
-import org.jpos.iso.ISOPackager;
+import org.jpos.iso.*;
 import org.jpos.iso.packager.GenericPackager;
 import org.jpos.util.FieldUtil;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author "Yoann Ciabaud" <yoann.ciabaud@monext.fr>
@@ -106,25 +105,12 @@ public class JPOSSampler extends AbstractSampler {
         int i = 1;
         String field = null;
         while (i < MAX_ISOBIT.intValue()) {
-            if ((field = isoMap.get("bit." + i)) != null) {
+            if ((field = isoMap.get(String.valueOf(i))) != null) {
                 if (field.equalsIgnoreCase("auto")) {
                     isoReq.set(i, FieldUtil.getValue(i));
-                    // else if (field.equalsIgnoreCase("stan"))
-                    // this.isoReq.set(i,
-                    // ISOUtil.zeropad(this.isoReq.getString(11), 8));
-                    // else if (field.equalsIgnoreCase("tlv"))
-                    // this.isoReq.set(i, tlvs.pack());
-                    // else if (field.equalsIgnoreCase("counter"))
-                    // this.isoReq.set(i, FieldUtil.getCounterValue());
-                    // else if (field.startsWith("+"))
-                    // this.isoReq.set(i, ISOUtil.hex2byte(field.substring(1)));
-                    // else if (field.equalsIgnoreCase("nested")) {
-                    // for (int n = 1; n < MAX_NESTED_ISOBIT.intValue(); n++) {
-                    // if ((field = (String) reqProp.get("bit." + i + "." + n))
-                    // != null)
-                    // isoReq.set(i + "." + n, field);
-                    // }
-                } else {
+                } else if (field.startsWith("+")) {
+					isoReq.set(i, ISOUtil.hex2byte(field.substring(1)));
+				} else {
                     isoReq.set(i, field);
                 }
             }
@@ -132,7 +118,7 @@ public class JPOSSampler extends AbstractSampler {
         }
 
         // String stan_tid_req = isoReq.getString(11) + isoReq.getString(41);
-        LOGGER.info(LOGGERISOMsg(isoReq));
+        LOGGER.info("[ISO] : "+LOGGERISOMsg(isoReq));
         return isoReq;
     }
 
@@ -270,6 +256,44 @@ public class JPOSSampler extends AbstractSampler {
 		String line = null;
 		try {
 			while ((line = bufReader.readLine()) != null) {
+				line = line.trim();
+				LOGGER.info("map " + line);
+				if (line.startsWith("<header>")) map.put("header", regex("\\d+", line));
+				if (line.startsWith("<field id=\"0\"")) map.put("mti", regex("ue=\"\\d+\"", line,4,1));
+				if (line.startsWith("<field id")) {
+					String bit = regex("id=\"\\d+\"", line, 4, 1);
+					String value = regex("ue=\"[0-9A-F]+\"", line, 4, 1);
+					map.put(bit, (line.contains("binary")?"+":"")+value);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		LOGGER.info("[mapping] " + map.size() + " keys <"+ map.get("header") +"-" +map.get("mti") + ">");
+		isoMap = map;
+	}
+
+	public String regex(String expression, String data) {
+		return regex(expression, data, 0, 0);
+	}
+
+	public String regex(String expression, String data, int removeCharStart, int removeCharEnd) {
+		Pattern pattern = Pattern.compile(expression);
+		Matcher matcher = pattern.matcher(data);
+		if (!matcher.find()) return null;
+		if (removeCharStart == 0 && removeCharEnd == 0) return matcher.group(0);
+		String result = matcher.group(0);
+		return result.substring(removeCharStart, result.length()-removeCharEnd);
+
+	}
+
+	/* @Deprecated ** properties based data **
+	private void mappingISOProp(String data) {
+		HashMap<String, String> map = new HashMap<String, String>();
+		BufferedReader bufReader = new BufferedReader(new StringReader(data.trim()));
+		String line = null;
+		try {
+			while ((line = bufReader.readLine()) != null) {
 				String parts[] = line.split("=");
 				map.put(parts[0].trim(), parts[1].trim());
 			}
@@ -278,6 +302,7 @@ public class JPOSSampler extends AbstractSampler {
 		}
 		isoMap = map;
 	}
+	*/
 
 	protected String obtainDataRequest() {
 		return getPropertyAsString(REQUEST);

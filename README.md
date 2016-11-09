@@ -35,4 +35,19 @@ On the plugin jpos sampler ...
 
 Packager field defines your iso packager in the program, usually using xml type. You can look this example at https://www.dropbox.com/s/oww38tt8e9xf39s/iso87binary.xml?dl=0
 
-Data field defines your set request field iso 8583. You must set request field iso 8583 in this file, you can look example data at https://www.dropbox.com/s/eztf5m2zh1p1v3y/iso.properties?dl=0
+copy the CONTENT of q2 log request to the text area, for example:
+
+`<header>32434123</header>`
+
+`<field id="0" value="0810"/>`
+
+`<field id="42" value="300004000050046"/>`
+
+`<field id="46" value="5F040B3030303030303030303031DF90080B3030303030303030303032" type="binary"/>`
+
+DO NOT FORGET TO KEEP BREAK LINE per `< />` just as your q2.log
+
+Or you can open the test-jmeter-jpos.jmx (included)
+
+
+
