@@ -15,7 +15,6 @@ import org.jpos.iso.packager.GenericPackager;
 import org.jpos.util.FieldUtil;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -165,7 +164,7 @@ public class JPOSSampler extends AbstractSampler {
 					}
 					res.setResponseMessage(logISOMsg);
 					res.setResponseCodeOK();
-					res.setResponseData(logISOMsg, StandardCharsets.UTF_8.name());
+					res.setResponseData(logISOMsg, null);
 					res.setSuccessful(true);
 				}
 			} catch (ISOException e1) {
@@ -224,6 +223,12 @@ public class JPOSSampler extends AbstractSampler {
 		return new Gson().toJson(restData);
 	}
 
+	private String getValue(String data){
+		int valueStartIndex = data.indexOf("value=\"");
+		int valueEndIndex = data.lastIndexOf("\"/>");
+		return data.substring(valueStartIndex,valueEndIndex).substring(7);
+	}
+
 	public static byte[] hexStringToByteArray(String s) {
 		int len = s.length();
 		byte[] data;
@@ -262,7 +267,7 @@ public class JPOSSampler extends AbstractSampler {
 				if (line.startsWith("<field id=\"0\"")) map.put("mti", regex("ue=\"\\d+\"", line,4,1));
 				if (line.startsWith("<field id")) {
 					String bit = regex("id=\"\\d+\"", line, 4, 1);
-					String value = regex("ue=\"[0-9A-F]+\"", line, 4, 1);
+					String value = getValue(line);
 					map.put(bit, (line.contains("binary")?"+":"")+value);
 				}
 			}
