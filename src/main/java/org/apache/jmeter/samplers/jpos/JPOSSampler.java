@@ -108,15 +108,17 @@ public class JPOSSampler extends AbstractSampler {
                 if (field.equalsIgnoreCase("auto")) {
                     isoReq.set(i, FieldUtil.getValue(i));
                 } else if (field.startsWith("+")) {
-					isoReq.set(i, ISOUtil.hex2byte(field.substring(1)));
+					String _field = field.substring(1);
+					if(_field.contains("type=")){
+						_field = _field.substring(0,_field.indexOf("\""));
+					}
+					isoReq.set(i, ISOUtil.hex2byte(_field));
 				} else {
                     isoReq.set(i, field);
                 }
             }
             i++;
         }
-
-        // String stan_tid_req = isoReq.getString(11) + isoReq.getString(41);
         LOGGER.info("[ISO] : "+LOGGERISOMsg(isoReq));
         return isoReq;
     }
