@@ -152,6 +152,7 @@ public class JPOSSampler extends AbstractSampler {
 			res.setResponseMessage("time-out");
 			res.setResponseCode("ER");
 			try {
+				processDataRequest();
 				ISOMsg isoReq = buildISOMsg();
 				if(isoReq != null) {
 					res.setRequestHeaders(LOGGERISOMsg(isoReq));
@@ -177,6 +178,11 @@ public class JPOSSampler extends AbstractSampler {
 				res.setResponseMessage(e1.getMessage());
 			}
 		}finally {
+			if (baseChannel.isConnected()) try {
+				baseChannel.disconnect();
+			} catch (IOException ioEx) {
+				LOGGER.error("fail closing channel", ioEx);
+			}
 			res.sampleEnd();
 		}
 		return res;
@@ -193,7 +199,7 @@ public class JPOSSampler extends AbstractSampler {
 	private String LOGGERISOMsg(ISOMsg msg) {
 		StringBuffer sBuffer = new StringBuffer();
 		try {
-			sBuffer.append("  MTI : " + msg.getMTI() + ", ");
+			sBuffer.append("  MTI : " + msg.getMTI() + ", \n");
 			for (int i = 1; i <= msg.getMaxField(); i++) {
 				if (msg.hasField(i)) {
 					sBuffer.append("Field-" + i + " : " + msg.getString(i)

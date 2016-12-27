@@ -15,7 +15,7 @@
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">1</stringProp>
+          <stringProp name="LoopController.loops">2</stringProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
@@ -33,17 +33,30 @@
           <stringProp name="JPOSSampler.channel">NACChannel</stringProp>
           <stringProp name="JPOSSampler.packager">C:\SVN\jpos-basic\src\main\resources\cfg\packager\iso87binary.xml</stringProp>
           <stringProp name="JPOSSampler.request">&lt;header&gt;3830333231&lt;/header&gt;
-      &lt;field id=&quot;0&quot; value=&quot;0800&quot;/&gt;
-      &lt;field id=&quot;3&quot; value=&quot;990000&quot;/&gt;
-      &lt;field id=&quot;4&quot; value=&quot;000000000999&quot;/&gt;
-      &lt;field id=&quot;11&quot; value=&quot;046996&quot;/&gt;
-      &lt;field id=&quot;24&quot; value=&quot;046&quot;/&gt;
-      &lt;field id=&quot;41&quot; value=&quot;00000099&quot;/&gt;
-      &lt;field id=&quot;42&quot; value=&quot;300004000050046&quot;/&gt;
-      &lt;field id=&quot;46&quot; value=&quot;5F040B3030303030303030303031DF90080B3030303030303030303032&quot; type=&quot;binary&quot;/&gt;</stringProp>
+&lt;field id=&quot;0&quot; value=&quot;0200&quot;/&gt;
+&lt;field id=&quot;2&quot; value=&quot;${CARDNUMBER}&quot;/&gt;      
+&lt;field id=&quot;3&quot; value=&quot;990000&quot;/&gt;
+&lt;field id=&quot;4&quot; value=&quot;000000000999&quot;/&gt;
+&lt;field id=&quot;11&quot; value=&quot;046996&quot;/&gt;
+&lt;field id=&quot;24&quot; value=&quot;046&quot;/&gt;
+&lt;field id=&quot;41&quot; value=&quot;00000099&quot;/&gt;
+&lt;field id=&quot;42&quot; value=&quot;300004000050046&quot;/&gt;
+&lt;field id=&quot;46&quot; value=&quot;5F040B3030303030303030303031DF90080B3030303030303030303032&quot; type=&quot;binary&quot;/&gt;</stringProp>
           <stringProp name="JPOSSampler.returnType">rb_text</stringProp>
         </org.apache.jmeter.samplers.jpos.JPOSSampler>
-        <hashTree/>
+        <hashTree>
+          <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="CSV Data Set Config" enabled="true">
+            <stringProp name="filename">/Users/awibowo/ME/JMeter-jPOS-components/jmx/test_voucher_gen.csv</stringProp>
+            <stringProp name="fileEncoding"></stringProp>
+            <stringProp name="variableNames"></stringProp>
+            <stringProp name="delimiter">,</stringProp>
+            <boolProp name="quotedData">false</boolProp>
+            <boolProp name="recycle">true</boolProp>
+            <boolProp name="stopThread">false</boolProp>
+            <stringProp name="shareMode">shareMode.all</stringProp>
+          </CSVDataSet>
+          <hashTree/>
+        </hashTree>
         <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>
