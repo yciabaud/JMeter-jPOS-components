@@ -3,6 +3,7 @@ package org.jpos.util;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
 import java.util.TimeZone;
 
 public class FieldUtil {
@@ -57,8 +58,17 @@ public class FieldUtil {
 			return getBit13();
 		case 37:
 			return getBit37();
+			case 62:
+				return getBit62();
+
 		}
 		return "bit." + i + " empty";
+	}
+
+	private static String getBit62() {
+		Random rnd = new Random();
+		int n = 100000 + rnd.nextInt(900000);
+		return String.valueOf(n);
 	}
 
 	public static class Interval {
