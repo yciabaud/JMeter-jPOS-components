@@ -3,6 +3,7 @@ JAR_LIB=jmeter-jpos-components-1.0.0-SNAPSHOT.jar
 
 if [ $# -eq 0 ]; then
 	echo "please input build to compile or jmeter root folder to deploy"
+	echo "warning!! be careful of space"
 	echo "example: sh deploy.sh build"
 	echo "example: sh deploy.sh /var/jmeter"
 	exit;
