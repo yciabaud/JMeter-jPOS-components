@@ -19,13 +19,7 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author "Yoann Ciabaud" <yoann.ciabaud@monext.fr>
- * @author "Erlangga" <erlangga258@gmail.com>
- */
 public class JPOSSampler extends AbstractSampler {
-
-	// https://svn.apache.org/repos/asf/jmeter/tags/v2_8/src/protocol/tcp/org/apache/jmeter/protocol/tcp/sampler/TCPSampler.java
 
 	private static final Logger LOGGER = LoggingManager.getLoggerForClass();
 	private static final Integer MAX_ISOBIT = Integer.valueOf(128);
@@ -46,7 +40,7 @@ public class JPOSSampler extends AbstractSampler {
 		LOGGER.info("call constructor() ...");
 	}
 
-	public void initialize() throws Exception {
+	public void initialize() {
 		LOGGER.info("call initilalize() ...");
 		processPackagerFile();
 		processDataRequest();
@@ -237,25 +231,7 @@ public class JPOSSampler extends AbstractSampler {
 		return data.substring(valueStartIndex,valueEndIndex).substring(7);
 	}
 
-	public static byte[] hexStringToByteArray(String s) {
-		int len = s.length();
-		byte[] data;
-
-		if (len == 1) {
-			data = new byte[1];
-			data[0] = (byte) Character.digit(s.charAt(0), 16);
-			return data;
-		} else {
-			data = new byte[len / 2];
-			for (int i = 0; i < len; i += 2) {
-				data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character
-						.digit(s.charAt(i + 1), 16));
-			}
-		}
-		return data;
-	}
-
-	protected void processDataRequest() throws IOException {
+	protected void processDataRequest() {
 		String reqFile = obtainDataRequest();
 		if (reqFile == null) {
 			return;
@@ -299,23 +275,6 @@ public class JPOSSampler extends AbstractSampler {
 		return result.substring(removeCharStart, result.length()-removeCharEnd);
 
 	}
-
-	/* @Deprecated ** properties based data **
-	private void mappingISOProp(String data) {
-		HashMap<String, String> map = new HashMap<String, String>();
-		BufferedReader bufReader = new BufferedReader(new StringReader(data.trim()));
-		String line = null;
-		try {
-			while ((line = bufReader.readLine()) != null) {
-				String parts[] = line.split("=");
-				map.put(parts[0].trim(), parts[1].trim());
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		isoMap = map;
-	}
-	*/
 
 	protected String obtainDataRequest() {
 		return getPropertyAsString(REQUEST);

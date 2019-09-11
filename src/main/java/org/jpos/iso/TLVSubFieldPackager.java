@@ -1,13 +1,13 @@
 package org.jpos.iso;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.jmeter.samplers.jpos.JPOSSampler;
+import org.apache.commons.codec.binary.Hex;
 import org.jpos.iso.packager.GenericSubFieldPackager;
 import org.jpos.util.LogEvent;
 import org.jpos.util.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Packager de sous champ avec concaténation des caracteres avant passage en byte.
@@ -54,7 +54,7 @@ public class TLVSubFieldPackager extends CustomSubFieldPackager {
                        if(fld[i]!=null){
                             byte[] b = fld[i].pack(c);
 
-                            byte[] id = JPOSSampler.hexStringToByteArray(String.format("%04d", i));
+                            byte[] id = Hex.decodeHex(String.format("%04d", i).toCharArray());
                             byte[] mybyte = new byte[1];
                             mybyte[0] = new Integer(b.length).byteValue();
                             l.add(id);

@@ -29,7 +29,6 @@ public class JPOSConfigGui extends AbstractConfigGui {
 	private final static String CHANNEL_KEY = "channel";
 	private final static String PACKAGER_KEY = "packager";
 	private final static String REQUEST = "request";
-	//private final static String RETURN_TYPE_KEY = "returnType"; //$NON-NLS-1$
 
 	private JTextField server;
 	private JTextField port;

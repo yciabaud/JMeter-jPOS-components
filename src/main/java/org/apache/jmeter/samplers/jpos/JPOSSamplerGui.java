@@ -47,7 +47,6 @@ public class JPOSSamplerGui
         sampler.clear();
         ((JPOSSampler) sampler).addTestElement(tcpDefaultPanel.createTestElement());
         this.configureTestElement(sampler);
-        //tcpDefaultPanel.modifyTestElement(sampler);
     }
 
     private void init() {
