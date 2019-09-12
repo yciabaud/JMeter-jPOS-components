@@ -5,10 +5,6 @@ import org.jpos.iso.ISOPackager;
 import org.jpos.iso.ISOUtil;
 import org.jpos.iso.channel.NACChannel;
 
-/**
- * @author erlangga
- * email : erlangga258@gmail.com
- */
 public class ChannelHelper {
 	
 	private String tpdu = "0000000000"; // default
